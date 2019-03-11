@@ -8,27 +8,23 @@ asma: # rdi *a, rsi *b, rdx c
         movq    %rdx, %rcx
 	andl	$63, %ecx
 
-        # r8, r10 = a[0]
         movq    (%rdi), %r10
-        movq    %r10, %r8
-
-        # r9, r11 = a[1]
         movq    8(%rdi), %r11
-        movq    %r11, %r9
 
         test $64, %rdx
-        jz ShiftLeft
-ShiftRight:
-        neg     %rdx
-        shrd    %cl, %r11, %r10
-        shrd    %cl, %r8, %r11
-        jmp Exit
-ShiftLeft:
+        cmovz  %r10, %r8
+        cmovnz %r11, %r8
+        cmovnz %r10, %r11
+        cmovnz %r8, %r10
+
+        movq    %r10, %r8
+        movq    %r11, %r9
+
         shld    %cl, %r11, %r10
         shld    %cl, %r8, %r11
-Exit:
-        movq    %r10, (%rsi)
-        movq    %r11, 8(%rsi)
+
+        movq     %r10, (%rsi)
+        movq     %r11, 8(%rsi)
 	ret
 	.cfi_endproc
 .LFE0:
