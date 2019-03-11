@@ -2,38 +2,33 @@
 	.text
 	.globl	asma
 	.type	asma, @function
-asma:
+asma: # rdi *a, rsi *b, rdx c
 .LFB0:
 	.cfi_startproc
-	movq	%rdx, %rax
-	shrq	$6, %rax
-	movq	%rax, %rcx
-	andl	$1, %ecx
-	leaq	(%rdi,%rcx,8), %r11
-	andl	$63, %edx
-	movq	(%r11), %r9
-	movl	%edx, %ecx
-	salq	%cl, %r9
-	movq	%rax, %rcx
-	andl	$1, %ecx
-	xorq	$1, %rcx
-	movl	%edx, %r10d
-	negl	%r10d
-	movq	(%rdi,%rcx,8), %r8
-	movl	%r10d, %ecx
-	shrq	%cl, %r8
-	orq	%r9, %r8
-	movq	%r8, (%rsi)
-	notq	%rax
-	andl	$1, %eax
-	movq	(%rdi,%rax,8), %rax
-	movl	%edx, %ecx
-	salq	%cl, %rax
-	movq	(%r11), %rdx
-	movl	%r10d, %ecx
-	shrq	%cl, %rdx
-	orq	%rdx, %rax
-	movq	%rax, 8(%rsi)
+        movq    %rdx, %rcx
+	andl	$63, %ecx
+
+        # r8, r10 = a[0]
+        movq    (%rdi), %r10
+        movq    %r10, %r8
+
+        # r9, r11 = a[1]
+        movq    8(%rdi), %r11
+        movq    %r11, %r9
+
+        test $64, %rdx
+        jz ShiftLeft
+ShiftRight:
+        neg     %rdx
+        shrd    %cl, %r11, %r10
+        shrd    %cl, %r8, %r11
+        jmp Exit
+ShiftLeft:
+        shld    %cl, %r11, %r10
+        shld    %cl, %r8, %r11
+Exit:
+        movq    %r10, (%rsi)
+        movq    %r11, 8(%rsi)
 	ret
 	.cfi_endproc
 .LFE0:
