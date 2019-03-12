@@ -17,9 +17,6 @@ asma: # rdi *a, rsi *b, rdx c
         cmovnz %r10, %r11
         cmovnz %r8, %r10
 
-        movq    %r10, %r8
-        movq    %r11, %r9
-
         shld    %cl, %r11, %r10
         shld    %cl, %r8, %r11
 
