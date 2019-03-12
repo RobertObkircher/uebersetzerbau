@@ -2,7 +2,7 @@
 	.text
 	.globl	asmb
 	.type	asmb, @function
-asmb:
+asmb: # rdi *a, rsi *b, rdx c, rcx n
 .LFB0:
 	.cfi_startproc
 	movq	%rcx, %r9
