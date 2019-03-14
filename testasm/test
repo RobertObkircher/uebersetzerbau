@@ -1,0 +1,6 @@
+#!/bin/sh
+make -C ../asma
+make -C ../asmb
+gcc test.c ../asma/asma.o ../asmb/asmb.o
+./a.out
+rm a.out
