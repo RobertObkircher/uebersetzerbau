@@ -44,13 +44,13 @@ asmb: # rdi *a, rsi *b, rdx c, rcx n
         # (n+longs+1)&(n-1)
         movq %rdx, %r8
         inc %r8
-        and %r9, %r8
+        and %r9, %r8 # %n
 
 loop:
         # read first value from relative_read_position
         movq (%rdi, %r8), %r10
         dec %r8
-        and %rax, %r8
+        and %r9, %r8 # %n
 
         # read the second value from relative_read_position
         movq (%rdi, %r8), %r11
