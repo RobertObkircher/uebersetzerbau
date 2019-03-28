@@ -30,6 +30,15 @@ void asmb_ref(unsigned long *a, unsigned long *b, unsigned long c, unsigned long
             b[i] = (a[(i-longs)%n]<<bits)|(a[(i-longs-1)%n]>>-bits);
 }
 
+void print_bin(unsigned long l) {
+    for (int i = 63; i >= 0; --i)
+        if (l & (1L << i)) printf("1");
+        else printf("0");
+
+    printf("\n");
+
+}
+
 int main() {
     FILE* rand = fopen("/dev/urandom", "r");
     if (!rand) {
@@ -59,16 +68,16 @@ int main() {
         for (int c = 0; c < 200; ++c) {
             asma(a, b, c);
             asma_ref(a, b_ref, c);
-        }
-        int invalid = 0;
-        for (int j = 0; j < n; ++j) {
-            if (b[j] != b_ref[j]) {
-                invalid = 1;
-                break;
+            int invalid = 0;
+            for (int j = 0; j < n; ++j) {
+                if (b[j] != b_ref[j]) {
+                    invalid = 1;
+                    break;
+                }
             }
+            if (invalid)
+                ++num_failed;
         }
-        if (invalid)
-            ++num_failed;
         ++num_total;
     }
     printf("failed: %d/%d\n", num_failed, num_total);
@@ -83,20 +92,39 @@ int main() {
                 perror("urandom");
                 exit(1);
             }
+
+            *a <<= 20;
     
             for (int c = 0; c < 200; ++c) {
-                asmb(a, b, c, n);
+            asmb(a, b, c, n);
                 asmb_ref(a, b_ref, c, n);
-            }
-            int invalid = 0;
-            for (int j = 0; j < n; ++j) {
-                if (b[j] != b_ref[j]) {
-                    invalid = 1;
-                    break;
+                int invalid = 0;
+                for (int j = 0; j < n; ++j) {
+                    if (b[j] != b_ref[j]) {
+                        invalid = 1;
+    
+                        printf("%d %d\n", c, n);
+                        for (int k = 0; k < n; ++k) {
+                            printf("%d %d %d\n", b[k], b_ref[k], a[k]);
+                        }
+                        for (int k = 0; k < n; ++k)
+                            print_bin(b[k]);
+                        printf("\nb_ref:\n");
+                        for (int k = 0; k < n; ++k)
+                            print_bin(b_ref[k]);
+                        printf("\na:\n");
+                        for (int k = 0; k < n; ++k)
+                            print_bin(a[k]);
+                        printf("\n");
+                        exit(4);
+    
+    
+                        break;
+                    }
                 }
+                if (invalid)
+                    ++num_failed;
             }
-            if (invalid)
-                ++num_failed;
             ++num_total;
         }
     }
