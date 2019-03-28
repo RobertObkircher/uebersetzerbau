@@ -25,8 +25,8 @@ asmb: # rdi *a, rsi *b, rdx c, rcx n
 
         # compute n-1 in %rax
         movq %rcx, %rax
-        jz exit # n = 0
-        dec %rax
+        add $-1, %rax
+        js exit
 
         # store n-1 to compute modulo n
         movq %rax, %r9
@@ -59,7 +59,7 @@ loop:
         movq %r11, (%rsi, %rax, 8)
 
         add $-1, %rax
-        js loop
+        jns loop
 exit:
 	ret
 	.cfi_endproc
