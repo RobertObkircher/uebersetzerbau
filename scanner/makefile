@@ -1,5 +1,5 @@
 LEX=flex
-LDFLAGS=-lfl
+LDLIBS=-lfl
 scanner: scanner.o
 scanner.o: scanner.l
 
