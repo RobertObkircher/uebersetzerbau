@@ -74,7 +74,7 @@ guards
     ;
 
 guarded
-    : guard stats control
+    : guard maybestats control
     ;
 
 guard
