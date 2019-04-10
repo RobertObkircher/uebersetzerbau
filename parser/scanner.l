@@ -27,7 +27,7 @@ extern int yylval;
 "+" ;
 "*" ;
 "." ;
-">="    { return GUARD; }
+">="    { return GREQ; }
 "-" ;
 
 [a-zA-Z][a-zA-Z0-9]*    { return ID; }

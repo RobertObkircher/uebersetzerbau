@@ -24,7 +24,97 @@ program
     ;
 
 funcdef
-    :
+    : ID '(' pars ')' stats END
+    ;
+
+pars
+    : ID
+    | pars ',' ID
+    ;
+
+stats
+    : /* empty */
+    | stats stat ';'
+    ;
+
+stat
+    : RETURN expr
+    | cond
+    | VAR ID '=' expr
+    | ID '=' expr
+    ;
+
+cond
+    : label COND guards END
+    | COND guards END
+    ;
+
+label
+    : ID ':'
+    ;
+
+guards
+    : /* empty */
+    | guards guarded ';'
+    ;
+
+guarded
+    : expr GUARD stats
+    | GUARD stats
+    | CONTINUE
+    | CONTINUE ID
+    | BREAK
+    | BREAK ID
+    ;
+
+expr
+    : NOT term
+    | HEAD term
+    | TAIL term
+    | ISLIST term
+    | plusterms
+    | multterms
+    | orterms
+    | dotterms
+    | term gteqeqminus term
+    ;
+
+plusterms
+    : term
+    | plusterms '+' term
+    ;
+
+multterms
+    : term
+    | multterms '*' term
+    ;
+
+orterms
+    : term
+    | orterms OR term
+    ;
+
+dotterms
+    : term
+    | dotterms '.' term
+    ;
+
+gteqeqminus
+    : GREQ 
+    | '='
+    | '-'
+    ;
+
+term
+    : '(' expr ')'
+    | NUM
+    | ID
+    | ID '(' params ')'
+    ;
+
+params
+    : expr
+    | params ',' expr
     ;
 
 %%
