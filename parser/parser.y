@@ -25,6 +25,7 @@ program
 
 funcdef
     : ID '(' pars ')' stats END
+    | ID '(' ')' stats END
     ;
 
 pars
