@@ -1,0 +1,16 @@
+a()
+    someLabel1: cond end;
+    cond
+        -> break;
+        -> break alabel;
+        0 -> continue somelabel;
+        -> continue;
+        -> cond
+            return 0;
+        end;
+        ->
+            return 0;
+            return 0;
+            return 0;
+    end;
+end;
