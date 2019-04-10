@@ -101,7 +101,7 @@ expr
 
 nhtis
     : nhti term
-    | nhtis nhti
+    | nhti nhtis
     ;
 
 nhti
