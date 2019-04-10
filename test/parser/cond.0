@@ -6,11 +6,13 @@ a()
         0 -> continue somelabel;
         -> continue;
         -> cond
-            return 0;
+            -> return 0; break;
         end;
+            continue;
         ->
             return 0;
             return 0;
             return 0;
+            break;
     end;
 end;
