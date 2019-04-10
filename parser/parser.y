@@ -24,8 +24,12 @@ program
     ;
 
 funcdef
-    : ID '(' pars ')' stats END
-    | ID '(' ')' stats END
+    : ID '(' maybepars ')' maybestats END
+    ;
+
+maybepars
+    : /* empty */
+    | pars
     ;
 
 pars
@@ -33,8 +37,13 @@ pars
     | pars ',' ID
     ;
 
-stats
+maybestats
     : /* empty */
+    | stats
+    ;
+
+stats
+    : stat ';'
     | stats stat ';'
     ;
 
@@ -46,38 +55,60 @@ stat
     ;
 
 cond
-    : label COND guards END
-    | COND guards END
+    : maybelabeldef COND maybeguards END
     ;
 
-label
-    : ID ':'
+maybelabeldef
+    : /* empty */
+    | ID ':'
+    ;
+
+maybeguards
+    : /* empty */
+    | guards
     ;
 
 guards
-    : /* empty */
+    : guarded ';'
     | guards guarded ';'
     ;
 
 guarded
-    : expr GUARD stats
-    | GUARD stats
-    | CONTINUE
+    : guard stats control
+    ;
+
+guard
+    : expr GUARD
+    | GUARD
+    ;
+
+control
+    : CONTINUE
     | CONTINUE ID
     | BREAK
     | BREAK ID
     ;
 
 expr
-    : NOT term
-    | HEAD term
-    | TAIL term
-    | ISLIST term
+    : term
+    | nhtis term
     | plusterms
     | multterms
     | orterms
     | dotterms
     | term gteqeqminus term
+    ;
+
+nhtis
+    : nhti
+    | nhti nhtis
+    ;
+
+nhti
+    : NOT
+    | HEAD
+    | TAIL
+    | ISLIST
     ;
 
 plusterms
@@ -110,7 +141,12 @@ term
     : '(' expr ')'
     | NUM
     | ID
-    | ID '(' params ')'
+    | ID '(' maybeparams ')'
+    ;
+
+maybeparams
+    : /* empty */
+    | params
     ;
 
 params
