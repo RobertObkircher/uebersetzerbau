@@ -17,18 +17,18 @@ extern int yylval;
 "islist"    { return ISLIST; }
 "or"    { return OR; }
 
-";" ;
-"(" ;
-")" ;
-"," ;
-"=" ;
-":" ;
+";" |
+"(" |
+")" |
+"," |
+"=" |
+":" |
+"+" |
+"*" |
+"." |
+"-" { return yytext[0]; }
 "->"    { return GUARD; }
-"+" ;
-"*" ;
-"." ;
 ">="    { return GREQ; }
-"-" ;
 
 [a-zA-Z][a-zA-Z0-9]*    { return ID; }
 
