@@ -91,7 +91,7 @@ control
 
 expr
     : term
-    | nhtis term
+    | nhtis
     | plusterms
     | multterms
     | orterms
@@ -100,8 +100,8 @@ expr
     ;
 
 nhtis
-    : nhti
-    | nhti nhtis
+    : nhti term
+    | nhtis nhti
     ;
 
 nhti
@@ -112,22 +112,22 @@ nhti
     ;
 
 plusterms
-    : term
+    : term '+' term
     | plusterms '+' term
     ;
 
 multterms
-    : term
+    : term '*' term
     | multterms '*' term
     ;
 
 orterms
-    : term
+    : term OR term
     | orterms OR term
     ;
 
 dotterms
-    : term
+    : term '.' term
     | dotterms '.' term
     ;
 
