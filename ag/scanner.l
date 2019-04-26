@@ -1,6 +1,8 @@
 %{
 #include "y.tab.h"
 extern int yylval;
+
+int line_number = 1;
 %}
 
 %%
@@ -36,7 +38,12 @@ extern int yylval;
 \$[0-9a-fA-F]+    { return NUM; }
 
 \{[^\}]*\} ;
-[ \t\n] ;
+[ \t] ;
 
-.    { printf("Lexical error.\n"); exit(1); }
+\n { ++line_number; }
+
+. {
+    printf("Lexical error at line %d: %s\n", line_number, yytext);
+    exit(1);
+}
 

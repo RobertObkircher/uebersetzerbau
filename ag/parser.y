@@ -9,9 +9,11 @@
 
 extern int yylex();
 
+extern int line_number;
+
 int yyerror(char *e) {
- printf("Parser error: '%s'...\n", e);
- exit(2);
+    printf("Parser error at line %d: %s\n", line_number, e);
+    exit(2);
 }
 
 %}
