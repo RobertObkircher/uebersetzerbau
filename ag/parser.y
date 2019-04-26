@@ -3,8 +3,6 @@
 %token ID NUM
 %start program
 
-%define parse.error verbose
-
 %{
 #include <stdio.h>
 #include <stdlib.h>
