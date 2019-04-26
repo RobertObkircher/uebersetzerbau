@@ -11,4 +11,4 @@ lex.yy.c: oxout.l y.tab.h
 	lex oxout.l
 
 clean:
-	$(RM) *.o ag y.tab.h y.output oxout.h oxout.l oxout.y
+	$(RM) ag y.tab.h y.tab.c lex.yy.c oxout.l oxout.y
