@@ -1,14 +1,14 @@
-LEX=flex
-LDLIBS=-lfl
+ag: y.tab.c y.tab.h lex.yy.c
+	gcc -o ag y.tab.h y.tab.c lex.yy.c -lfl
 
-ag: parser
-	mv parser ag
+oxout.y oxout.l: parser.y scanner.l
+	ox parser.y scanner.l
 
-parser: scanner.o
-parser.o: scanner.l parsercode
+y.tab.c y.tab.h: oxout.y
+	yacc -d oxout.y
 
-parsercode: parser.y
-	$(YACC) -v -d parser.y 
+lex.yy.c: oxout.l y.tab.h
+	lex oxout.l
 
 clean:
-	$(RM) *.o ag y.tab.h y.output
+	$(RM) *.o ag y.tab.h y.output oxout.h oxout.l oxout.y
