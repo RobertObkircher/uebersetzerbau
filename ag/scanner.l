@@ -21,16 +21,16 @@ int line_number = 1;
 "islist"    { return ISLIST; }
 "or"    { return OR; }
 
-";" |
-"(" |
-")" |
-"," |
-"=" |
-":" |
-"+" |
-"*" |
-"." |
-"-" { return yytext[0]; }
+";" { return ';'; }
+"(" { return '('; }
+")" { return ')'; }
+"," { return ','; }
+"=" { return '='; }
+":" { return ':'; }
+"+" { return '+'; }
+"*" { return '*'; }
+"." { return '.'; }
+"-" { return '-'; }
 "->"    { return GUARD; }
 ">="    { return GREQ; }
 
