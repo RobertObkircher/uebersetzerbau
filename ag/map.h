@@ -98,7 +98,7 @@ VALUE FN(insert)(struct MAP *map, KEY key, VALUE value) {
         for (int i = 0; i < old_capacity; ++i) {
             struct Entry *entry = old[i];
             if (entry)
-                FN(_insert)(map, entry->key, entry->value);
+                FN(insert)(map, entry->key, entry->value);
         }
         free(old);
     }
