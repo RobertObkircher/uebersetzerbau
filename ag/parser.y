@@ -20,23 +20,23 @@ int yyerror(char *e) {
 %}
 
 @attributes { char *name; } ID
-@attributes { struct Symtab *sym; } funcdef maybepars pars maybestats stats stat cond maybelabeldef maybeguards guards guarded guard control expr nhtis nhti plusterms multterms orterms dotterms gteqeqminus term maybeparams params
+@attributes { @autoinh struct Symtab *sym; } funcdef
 
-@autoinh sym
-
+/*
 @traversal @preorder symtab
+*/
 
 %%
 
 program
     : /* empty */
-    |  program funcdef ';'
+    |  program funcdef ';' @{
+        @i @funcdef.sym@ = symtab_new(@ID.name@);
+    @}
     ;
 
 funcdef
-    : ID '(' maybepars ')' maybestats END @{
-        @i @funcdef.sym@ = symtab_new(@ID.name@);
-    @}
+    : ID '(' maybepars ')' maybestats END
     ;
 
 maybepars
@@ -46,10 +46,14 @@ maybepars
 
 pars
     : ID @{
+    /*
         @symtab symtab_variable_declaration(@pars.sym@, @ID.name@);
+        */
     @}
     | pars ',' ID @{
+    /*
         @symtab symtab_variable_declaration(@pars.sym@, @ID.name@);
+        */
     @}
     ;
 
