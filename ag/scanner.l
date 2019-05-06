@@ -1,5 +1,7 @@
 %{
 #include "y.tab.h"
+#include <string.h>
+
 extern int yylval;
 
 int line_number = 1;
@@ -32,7 +34,7 @@ int line_number = 1;
 "->"    { return GUARD; }
 ">="    { return GREQ; }
 
-[a-zA-Z][a-zA-Z0-9]*    { return ID; }
+[a-zA-Z][a-zA-Z0-9]* return ID; @{ ID.name = strdup(yytext); @}
 
 [0-9]+ |
 \$[0-9a-fA-F]+    { return NUM; }

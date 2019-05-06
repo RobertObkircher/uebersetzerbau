@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <symtab.h>
 
 extern int yylex();
 
@@ -16,6 +17,11 @@ int yyerror(char *e) {
     printf("Parser error at line %d: %s\n", line_number, e);
     exit(2);
 }
+
+@attributes { char *name; } ID
+@attributes { struct Symtab *sym; } funcdef maybepars pars maybestats
+
+@traversal @preorder symtab
 
 %}
 
@@ -27,17 +33,27 @@ program
     ;
 
 funcdef
-    : ID '(' maybepars ')' maybestats END
+    : ID '(' maybepars ')' maybestats END @{
+        @i @funcdef.sym@ = symtab_new();
+        @i @maybepars.sym@ = @funcdef.sym@;
+        @i @maybestats.sym@ = @maybestats.sym@;
+    @}
     ;
 
 maybepars
     : /* empty */
-    | pars
+    | pars @{
+        @i @pars.sym@ = @maybepars.sym@;
+    @}
     ;
 
 pars
-    : ID
-    | pars ',' ID
+    : ID @{
+        @symtab symtab_variable_declaration(@pars.sym@, @ID.name@);
+    @}
+    | pars ',' ID @{
+        @symtab symtab_variable_declaration(@pars.sym@, @ID.name@);
+    @}
     ;
 
 maybestats
