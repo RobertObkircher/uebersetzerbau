@@ -34,7 +34,7 @@ int line_number = 1;
 "->"    { return GUARD; }
 ">="    { return GREQ; }
 
-[a-zA-Z][a-zA-Z0-9]* return ID; @{ ID.name = strdup(yytext); @}
+[a-zA-Z][a-zA-Z0-9]* return ID; @{ @ID.name@ = strdup(yytext); @}
 
 [0-9]+ |
 \$[0-9a-fA-F]+    { return NUM; }

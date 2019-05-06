@@ -20,7 +20,7 @@ int yyerror(char *e) {
 %}
 
 @attributes { char *name; } ID
-@attributes { struct Symtab *sym; } funcdef maybepars pars maybestats
+@attributes { struct Symtab *sym; } funcdef maybepars pars maybestats stats stat cond maybelabeldef maybeguards guards guarded guard control expr nhtis nhti plusterms multterms orterms dotterms gteqeqminus term maybeparams params
 
 @autoinh sym
 
