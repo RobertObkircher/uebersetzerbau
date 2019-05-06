@@ -3,15 +3,13 @@
 
 struct Symtab;
 
-struct Symtab* symtab_new();
+struct Symtab *symtab_new();
+struct Symtab *symtab_new_with_variable(char *name);
 
-void symtab_enter_scope(struct Symtab *symtab);
-void symtab_leave_scope(struct Symtab *symtab);
+struct Symtab *symtab_variable_declaration(struct Symtab *symtab, char *name);
+struct Symtab *symtab_variable_usage(struct Symtab *symtab, char *name);
 
-void symtab_variable_declaration(struct Symtab *symtab, char *name);
-void symtab_variable_usage(struct Symtab *symtab, char *name);
-
-void symtab_label_declaration(struct Symtab *symtab, char *name);
-void symtab_label_usage(struct Symtab *symtab, char *name);
+struct Symtab *symtab_label_declaration(struct Symtab *symtab, char *name);
+struct Symtab *symtab_label_usage(struct Symtab *symtab, char *name);
 
 #endif

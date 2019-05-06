@@ -1,0 +1,18 @@
+a(x, y, z)
+    someLabel1: cond end;
+    somelabel: cond
+        -> break z;
+        -> break somelabel;
+        0 -> continue somelabel;
+        -> continue;
+        -> cond
+            -> return x; break;
+        end;
+            continue;
+        ->
+            return z;
+            return 0;
+            return 0;
+            break;
+    end;
+end;

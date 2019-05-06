@@ -17,44 +17,50 @@ int yyerror(char *e) {
     printf("Parser error at line %d: %s\n", line_number, e);
     exit(2);
 }
+
 %}
 
-@attributes { char *name; } ID
-@attributes { @autoinh struct Symtab *sym; } funcdef
+@autosyn name sym_up
+@autoinh sym
 
-/*
-@traversal @preorder symtab
-*/
+@attributes { char *name; } ID maybelabeldef 
+@attributes { struct Symtab *sym_up; } maybepars pars
+@attributes { struct Symtab *sym; } maybestats cond maybeguards guards guarded guard expr nhtis nhti plusterms multterms orterms dotterms gteqeqminus term maybeparams params control
+@attributes { struct Symtab *sym; struct Symtab *sym_up; } stat stats
+
+@traversal symusage
 
 %%
 
 program
     : /* empty */
-    |  program funcdef ';' @{
-        @i @funcdef.sym@ = symtab_new();
-    @}
+    |  program funcdef ';'
     ;
 
 funcdef
     : ID '(' maybepars ')' maybestats END
+        @{
+            @i @maybestats.sym@ = @maybepars.sym_up@;
+        @}
     ;
 
 maybepars
     : /* empty */
+        @{
+            @i @maybepars.sym_up@ = symtab_new();
+        @}
     | pars
     ;
 
 pars
-    : ID @{
-    /*
-        @symtab symtab_variable_declaration(@pars.sym@, @ID.name@);
-        */
-    @}
-    | pars ',' ID @{
-    /*
-        @symtab symtab_variable_declaration(@pars.sym@, @ID.name@);
-        */
-    @}
+    : ID
+        @{
+            @i @pars.sym_up@ = symtab_new_with_variable(@ID.name@);
+        @}
+    | pars ',' ID
+        @{
+            @i @pars.sym_up@ = symtab_variable_declaration(@pars.1.sym_up@, @ID.name@);
+        @}
     ;
 
 maybestats
@@ -64,22 +70,39 @@ maybestats
 
 stats
     : stat ';'
+        @{
+            @i @stats.sym_up@ = @stat.sym_up@;
+        @}
     | stats stat ';'
+        @{
+            @i @stat.sym@ = @stats.1.sym_up@;
+            @i @stats.sym_up@ = @stat.sym_up@;
+        @}
     ;
 
 stat
-    : RETURN expr
-    | cond
-    | VAR ID '=' expr
+    : RETURN expr @{ @i @stat.sym_up@ = @stat.sym@; @}
+    | cond @{ @i @stat.sym_up@ = @stat.sym@; @}
+    | VAR ID '=' expr @{ @i @stat.sym_up@ = symtab_variable_declaration(@stat.sym@, @ID.name@); @}
     | ID '=' expr
+        @{
+            @i @stat.sym_up@ = symtab_variable_usage(@stat.sym@, @ID.name@);
+            // TODO use symusage traversal instead?
+        @}
     ;
 
 cond
     : maybelabeldef COND maybeguards END
+        @{
+            @i @maybeguards.sym@ = symtab_label_declaration(@cond.sym@, @maybelabeldef.name@);
+        @}
     ;
 
 maybelabeldef
     : /* empty */
+        @{
+            @i @maybelabeldef.name@ = NULL;
+        @}
     | ID ':'
     ;
 
@@ -105,8 +128,14 @@ guard
 control
     : CONTINUE
     | CONTINUE ID
+        @{
+            @symusage symtab_label_usage(@control.sym@, @ID.name@);
+        @}
     | BREAK
     | BREAK ID
+        @{
+            @symusage symtab_label_usage(@control.sym@, @ID.name@);
+        @}
     ;
 
 expr
@@ -161,6 +190,9 @@ term
     : '(' expr ')'
     | NUM
     | ID
+        @{
+            @symusage symtab_variable_usage(@term.sym@, @ID.name@);
+        @}
     | ID '(' maybeparams ')'
     ;
 

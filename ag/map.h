@@ -35,15 +35,22 @@
 #define EVALUATOR(prefix, name) PASTER(prefix, name)
 #define FN(name) EVALUATOR(MAP, name)
 
-#ifndef MAP_IMPLEMENTATION
+/*
+ * public interface:
+ */
+
 struct MAP;
 struct MAP *FN(new)();
+struct MAP *FN(new_clone)(struct MAP *original);
 void FN(delete)();
 VALUE FN(insert)(struct MAP *map, KEY key, VALUE value);
 VALUE FN(lookup)(struct MAP *map, KEY key);
 VALUE FN(remove)(struct MAP *map, KEY key);
 int FN(size)(struct MAP *map);
-#endif
+
+/*
+ * implementation:
+ */
 
 #ifdef MAP_IMPLEMENTATION
 #include "allocation.h"
@@ -74,6 +81,27 @@ struct MAP *FN(new)() {
     return map;
 }
 
+static struct Entry *clone_entries(struct Entry *entry) {
+    struct Entry *clone = NULL;
+    if (entry) {
+        clone = malloc_or_exit(sizeof *clone);
+        clone->key = entry->key;
+        clone->value = entry->value;
+        clone->next = clone_entries(entry->next);
+    }
+    return clone;
+}
+
+struct MAP *FN(new_clone)(struct MAP *original) {
+    struct MAP *map = malloc_or_exit(sizeof *map);
+    map->capacity = original->capacity;
+    map->size = original->size;
+    map->entries = malloc_or_exit(map->capacity * sizeof *map->entries);
+    for (int i = 0; i < map->capacity; ++i)
+        map->entries[i] = clone_entries(original->entries[i]);
+    return map;
+}
+
 static unsigned int entry_index(struct MAP *map, KEY key) {
     return hash(key) % map->capacity;
 }
@@ -91,16 +119,25 @@ VALUE FN(insert)(struct MAP *map, KEY key, VALUE value) {
     int old_capacity = map->capacity;
     if (map->size >= old_capacity * 3 / 4) {
         map->capacity *= 2;
-        struct Entry **old = map->entries;
+        struct Entry **old_entries = map->entries;
         map->entries = malloc_or_exit(map->capacity * sizeof *map->entries);
         for (int i = 0; i < map->capacity; ++i)
             map->entries[i] = NULL;
         for (int i = 0; i < old_capacity; ++i) {
-            struct Entry *entry = old[i];
-            if (entry)
-                FN(insert)(map, entry->key, entry->value);
+            struct Entry *toInsert = old_entries[i];
+            while (toInsert) {
+                unsigned int index = entry_index(map, toInsert->key);
+
+                struct Entry *successor = map->entries[index];
+                struct Entry *toInsertNext = toInsert->next;
+
+                map->entries[index] = toInsert;
+                toInsert->next = successor;
+
+                toInsert = toInsertNext;
+            }
         }
-        free(old);
+        free(old_entries);
     }
 
     unsigned int index = entry_index(map, key);
@@ -126,6 +163,7 @@ VALUE FN(lookup)(struct MAP *map, KEY key) {
 }
 
 VALUE FN(remove)(struct MAP *map, KEY key) {
+#warning remove: unused function that is probably wrong
     unsigned int index = entry_index(map, key);
     struct Entry **entry = map->entries + index;
     while (*entry) {

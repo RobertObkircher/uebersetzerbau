@@ -1,1 +1,2 @@
 git add . && git commit -m '...' && git push
+ssh u11807844@g0.complang.tuwien.ac.at -t './runtests'

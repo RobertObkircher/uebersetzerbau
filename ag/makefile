@@ -1,5 +1,5 @@
 ag: y.tab.c y.tab.h lex.yy.c
-	gcc -o ag y.tab.h y.tab.c lex.yy.c -lfl
+	gcc -o ag y.tab.h y.tab.c lex.yy.c *.o -lfl
 
 oxout.y oxout.l: parser.y scanner.l
 	ox parser.y scanner.l

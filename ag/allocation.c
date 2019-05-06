@@ -28,7 +28,8 @@ void *realloc_or_exit(void *ptr, size_t size) {
 }
 
 void *reallocarray_or_exit(void *ptr, size_t nmemb, size_t size) {
-    void *result = reallocarray(ptr, nmemb, size);
+#warning TODO reallocarray_or_exit doesn't check overflow, since reallocarray isn't available on g0
+    void *result = realloc(ptr, size); //reallocarray(ptr, nmemb, size);
     if (!result)
         panic();
     return result;

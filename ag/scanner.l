@@ -9,30 +9,29 @@ int line_number = 1;
 
 %%
 
-"end"   { return END; }
-"return"    { return RETURN; }
-"var"    { return VAR; }
-"cond"    { return COND; }
-"continue"    { return CONTINUE; }
-"break"    { return BREAK; }
-"not"    { return NOT; }
-"head"    { return HEAD; }
-"tail"    { return TAIL; }
-"islist"    { return ISLIST; }
-"or"    { return OR; }
-
-";" { return ';'; }
-"(" { return '('; }
-")" { return ')'; }
-"," { return ','; }
-"=" { return '='; }
-":" { return ':'; }
-"+" { return '+'; }
-"*" { return '*'; }
-"." { return '.'; }
-"-" { return '-'; }
-"->"    { return GUARD; }
-">="    { return GREQ; }
+"end"       return END;
+"return"    return RETURN;
+"var"       return VAR;
+"cond"      return COND;
+"continue"  return CONTINUE;
+"break"     return BREAK;
+"not"       return NOT;
+"head"      return HEAD;
+"tail"      return TAIL;
+"islist"    return ISLIST;
+"or"        return OR;
+"->"        return GUARD;
+">="        return GREQ;
+";"         return ';';
+"("         return '(';
+")"         return ')';
+","         return ',';
+"="         return '=';
+":"         return ':';
+"+"         return '+';
+"*"         return '*';
+"."         return '.';
+"-"         return '-';
 
 [a-zA-Z][a-zA-Z0-9]* return ID; @{ @ID.name@ = strdup(yytext); @}
 
