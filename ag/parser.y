@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <symtab.h>
+#include "symtab.h"
 
 extern int yylex();
 
@@ -36,7 +36,7 @@ funcdef
     : ID '(' maybepars ')' maybestats END @{
         @i @funcdef.sym@ = symtab_new();
         @i @maybepars.sym@ = @funcdef.sym@;
-        @i @maybestats.sym@ = @maybestats.sym@;
+        @i @maybestats.sym@ = @funcdef.sym@;
     @}
     ;
 
