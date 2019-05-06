@@ -1,24 +1,35 @@
-#include "allocorexit.h"
+#include "allocation.h"
 #include <malloc.h>
 
-static void *panic() {
+static void panic() {
     perror("out of memory");
     exit(42);
-    return NULL;
 }
 
 void *malloc_or_exit(size_t size) {
-    return malloc(size) || panic();
+    void *result = malloc(size);
+    if (!result)
+        panic();
+    return result;
 }
 
 void *calloc_or_exit(size_t nmemb, size_t size) {
-    return calloc(nmemb, size) || panic();
+    void *result = calloc(nmemb, size);
+    if (!result)
+        panic();
+    return result;
 }
 
 void *realloc_or_exit(void *ptr, size_t size) {
-    return realloc(ptr, size) || panic();
+    void *result = realloc(ptr, size);
+    if (!result)
+        panic();
+    return result;
 }
 
 void *reallocarray_or_exit(void *ptr, size_t nmemb, size_t size) {
-    return reallocarray(ptr, nmemb, size) || panic();
+    void *result = reallocarray(ptr, nmemb, size);
+    if (!result)
+        panic();
+    return result;
 }
