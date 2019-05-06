@@ -7,7 +7,7 @@ oxout.y oxout.l: parser.y scanner.l
 y.tab.c y.tab.h: oxout.y
 	yacc -d oxout.y
 
-lex.yy.c: oxout.l y.tab.h
+lex.yy.c: oxout.l y.tab.h symtab.o symmap.o allocation.o
 	lex oxout.l
 
 symtab.o: symtab.c symmap.h
