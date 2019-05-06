@@ -17,13 +17,14 @@ int yyerror(char *e) {
     printf("Parser error at line %d: %s\n", line_number, e);
     exit(2);
 }
+%}
 
 @attributes { char *name; } ID
 @attributes { struct Symtab *sym; } funcdef maybepars pars maybestats
 
-@traversal @preorder symtab
+@autoinh sym
 
-%}
+@traversal @preorder symtab
 
 %%
 
@@ -34,17 +35,13 @@ program
 
 funcdef
     : ID '(' maybepars ')' maybestats END @{
-        @i @funcdef.sym@ = symtab_new();
-        @i @maybepars.sym@ = @funcdef.sym@;
-        @i @maybestats.sym@ = @funcdef.sym@;
+        @i @funcdef.sym@ = symtab_new(@ID.name@);
     @}
     ;
 
 maybepars
     : /* empty */
-    | pars @{
-        @i @pars.sym@ = @maybepars.sym@;
-    @}
+    | pars
     ;
 
 pars
