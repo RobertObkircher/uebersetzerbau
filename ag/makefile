@@ -10,5 +10,9 @@ y.tab.c y.tab.h: oxout.y
 lex.yy.c: oxout.l y.tab.h
 	lex oxout.l
 
+symtab.o: symtab.c symmap.h
+symmap.o: symmap.c symmap.h map.h
+allocation.o: allocation.c allocation.h
+
 clean:
-	$(RM) ag y.tab.h y.tab.c lex.yy.c oxout.l oxout.y
+	$(RM) *.o ag y.tab.h y.tab.c lex.yy.c oxout.l oxout.y
