@@ -31,7 +31,7 @@ int yyerror(char *e) {
 program
     : /* empty */
     |  program funcdef ';' @{
-        @i @funcdef.sym@ = symtab_new(@ID.name@);
+        @i @funcdef.sym@ = symtab_new();
     @}
     ;
 
