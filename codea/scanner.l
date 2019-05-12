@@ -1,6 +1,7 @@
 %{
 #include "y.tab.h"
 #include <string.h>
+#include <stdlib.h>
 
 extern int yylval;
 
@@ -35,8 +36,8 @@ int line_number = 1;
 
 [a-zA-Z][a-zA-Z0-9]* return ID; @{ @ID.name@ = strdup(yytext); @}
 
-[0-9]+ |
-\$[0-9a-fA-F]+    { return NUM; }
+[0-9]+         return NUM; @{ @NUM.value@ = atol(yytext); @}
+\$[0-9a-fA-F]+ return NUM; @{ @NUM.value@ = strtoul(yytext + 1, 0, 16); @}
 
 \{[^\}]*\} ;
 [ \t] ;

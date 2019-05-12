@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "symtab.h"
+#include "tree.h"
 
 extern int yylex();
 
@@ -23,9 +24,11 @@ int yyerror(char *e) {
 @autosyn name sym_up
 @autoinh sym
 
+@attributes { long value; } NUM
 @attributes { char *name; } ID maybelabeldef 
 @attributes { struct Symtab *sym_up; } maybepars pars
-@attributes { struct Symtab *sym; } maybestats cond maybeguards guards guarded guard expr nhtis nhti plusterms multterms orterms dotterms gteqeqminus term maybeparams params control
+@attributes { struct Symtab *sym; } maybestats cond maybeguards guards guarded guard expr nhtis nhti plusterms multterms orterms dotterms gteqeqminus maybeparams params control
+@attributes { struct tree *tree; struct Symtab *sym; } term
 @attributes { struct Symtab *sym; struct Symtab *sym_up; } stat stats
 
 @traversal symusage
@@ -188,12 +191,22 @@ gteqeqminus
 
 term
     : '(' expr ')'
+        @{
+            @i @term.tree@ = NULL; // TODO
+        @}
     | NUM
+        @{
+            @i @term.tree@ = tree_new_num(@NUM.value@);
+        @}
     | ID
         @{
             @symusage symtab_variable_usage(@term.sym@, @ID.name@);
+            @i @term.tree@ = NULL; // TODO
         @}
     | ID '(' maybeparams ')'
+        @{
+            @i @term.tree@ = NULL; // TODO
+        @}
     ;
 
 maybeparams

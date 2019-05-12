@@ -1,0 +1,42 @@
+%{
+#include <assert.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include "tree.h"
+
+static int regs[REG_COUNT];
+
+enum Register reg() {
+    for (int i = 0; i < REG_COUNT; ++i) {
+        if (regs[i] == 0) {
+            regs[i] = 1;
+            return i;
+        }
+    }
+    printf("out of registers\n");
+    exit(1);
+}
+
+/* symbols below must also be defined
+   definition in tree.h!!!
+*/
+
+/*
+expr:   reg            # 1 # printf("\treturn r%d\n",bnode->reg_no);
+reg:    ADD(reg,reg)   # 1 # bnode->reg_no=getreg(); printf("\tr%d = r%d + r%d\n",bnode->reg_no,LEFT_CHILD(bnode)->reg_no,RIGHT_CHILD(bnode)->reg_no);
+reg:    VAR            # 1 # bnode->reg_no=getreg(); printf("\tr%d = var %s\n",bnode->reg_no,bnode->id);
+reg:	CONST          # 1 # bnode->reg_no=getreg(); printf("\tr%d = cons %d\n",bnode->reg_no,bnode->number);
+reg:	con            # 1 # bnode->reg_no=getreg(); printf("\tr%d = cons %d\n",bnode->reg_no,bnode->number);
+con:	ADD(con,con)   # 0 # bnode->number = LEFT_CHILD(bnode)->number + RIGHT_CHILD(bnode)->number;
+con:	CONST          # 0 # bnode->number = bnode->number;
+*/
+
+%}
+%term CONST=1 VAR=2 ADDITION=3 SUBTRACTION=4 MULTIPLICATION=5 CONS=6 NOT_LESS=7 EQUAL=8 OR=9 NOT=10 ISLIST=11 HEAD=12 TAIL=13
+
+%start reg
+%%
+
+reg: CONST             # 1 # bnode->reg = reg(); printf("reg: CONST\n");
+
+%%
