@@ -26,6 +26,11 @@ static struct Symtab *clone(struct Symtab *symtab) {
     return result;
 }
 
+struct Symtab *symtab_new_clone(struct Symtab *symtab) {
+    struct Symtab *result = clone(symtab);
+    return result;
+}
+
 struct Symtab *symtab_variable_declaration(struct Symtab *symtab, char *name) {
     struct Symtab *result = clone(symtab);
     struct symmap *map = result->entries;
@@ -76,4 +81,21 @@ struct Symtab *symtab_label_usage(struct Symtab *symtab, char *name) {
         exit(3);
     }
     return symtab;
+}
+
+int symtab_size(struct Symtab *symtab) {
+    return symmap_size(symtab->entries);
+}
+
+// TODO this is ugly
+static void(*foreach_fn)(char* key);
+static void foreach_var(char *key, enum SymType type) {
+    if (type == SYM_TYPE_VARIABLE) {
+        foreach_fn(key);
+    }
+}
+
+void symtab_foreach_variable(struct Symtab *symtab, void(*iter)(char *key)) {
+    foreach_fn = iter;
+    symmap_foreach(symtab->entries, foreach_var);
 }

@@ -1,28 +1,16 @@
 #ifndef __TREE_H__
 #define __TREE_H__
 
-enum Register {
-    /*caller saved*/
-    RAX = 0,
-    RCX, /* 4 */
-    RDX, /* 3 */
-    RSI, /* 2 */
-    RDI, /* 1 */
-    R8,  /* 5 */
-    R9,  /* 6 */
-    R10,
-    R11,
-    REG_COUNT,
-};
-
+#include "regmap.h"
 
 typedef struct tree {
 	int op;                    /* node type */
 	struct tree *kids[2];      /* successor nodes */
-	                           /* attributes of node (depending on type) */
+
       	enum Register reg;
        	long num;
-        char *id;                  /* variable name */
+        char *id;
+
         struct burm_state* state;       /* state variable for BURG */
 } *NODEPTR_TYPE, *Tree;
 
@@ -50,5 +38,6 @@ enum Type {
 };
 
 struct tree* tree_new_num(long num);
+struct tree* tree_new_id(char *id);
 
 #endif

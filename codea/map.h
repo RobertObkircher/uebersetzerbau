@@ -47,6 +47,7 @@ VALUE FN(insert)(struct MAP *map, KEY key, VALUE value);
 VALUE FN(lookup)(struct MAP *map, KEY key);
 VALUE FN(remove)(struct MAP *map, KEY key);
 int FN(size)(struct MAP *map);
+void FN(foreach)(struct MAP *map, void(*iter)(KEY key, VALUE value));
 
 /*
  * implementation:
@@ -181,6 +182,16 @@ VALUE FN(remove)(struct MAP *map, KEY key) {
 
 int FN(size)(struct MAP *map) {
     return map->size;
+}
+
+void FN(foreach)(struct MAP *map, void(*iter)(KEY key, VALUE value)) {
+    for (int i = 0; i < map->capacity; ++i) {
+        struct Entry *entry = map->entries[i];
+        while(entry) {
+            iter(entry->key, entry->value);
+            entry = entry->next;
+        }
+    }
 }
 
 #endif

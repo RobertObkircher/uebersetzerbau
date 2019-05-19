@@ -19,6 +19,8 @@ int yyerror(char *e) {
     exit(2);
 }
 
+extern void invoke_burm(NODEPTR_TYPE root, char *fn_name, struct Symtab *params);
+
 %}
 
 @autosyn name sym_up
@@ -27,11 +29,12 @@ int yyerror(char *e) {
 @attributes { long value; } NUM
 @attributes { char *name; } ID maybelabeldef 
 @attributes { struct Symtab *sym_up; } maybepars pars
-@attributes { struct Symtab *sym; } maybestats cond maybeguards guards guarded guard expr nhtis nhti plusterms multterms orterms dotterms gteqeqminus maybeparams params control
-@attributes { struct tree *tree; struct Symtab *sym; } term
+@attributes { struct Symtab *sym; } cond maybeguards guards guarded guard expr nhtis nhti plusterms multterms orterms dotterms gteqeqminus maybeparams params control
+@attributes { struct tree *tree; struct Symtab *sym; } term maybestats
 @attributes { struct Symtab *sym; struct Symtab *sym_up; } stat stats
 
 @traversal symusage
+@traversal @preorder codegen
 
 %%
 
@@ -43,7 +46,8 @@ program
 funcdef
     : ID '(' maybepars ')' maybestats END
         @{
-            @i @maybestats.sym@ = @maybepars.sym_up@;
+            @i @maybestats.sym@ = symtab_new_clone(@maybepars.sym_up@);
+            @codegen invoke_burm(@maybestats.tree@, @ID.name@, @maybepars.sym_up@);
         @}
     ;
 
@@ -68,7 +72,13 @@ pars
 
 maybestats
     : /* empty */
+        @{
+            @i @maybestats.tree@ = NULL;
+        @}
     | stats
+        @{
+            @i @maybestats.tree@ = NULL;
+        @}
     ;
 
 stats
@@ -201,7 +211,7 @@ term
     | ID
         @{
             @symusage symtab_variable_usage(@term.sym@, @ID.name@);
-            @i @term.tree@ = NULL; // TODO
+            @i @term.tree@ = tree_new_id(@ID.name@);
         @}
     | ID '(' maybeparams ')'
         @{
