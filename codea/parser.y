@@ -29,9 +29,9 @@ extern void invoke_burm(NODEPTR_TYPE root, char *fn_name, struct Symtab *params)
 @attributes { long value; } NUM
 @attributes { char *name; } ID maybelabeldef 
 @attributes { struct Symtab *sym_up; } maybepars pars
-@attributes { struct Symtab *sym; } cond maybeguards guards guarded guard expr nhtis nhti plusterms multterms orterms dotterms gteqeqminus maybeparams params control
-@attributes { struct tree *tree; struct Symtab *sym; } term maybestats
-@attributes { struct Symtab *sym; struct Symtab *sym_up; } stat stats
+@attributes { struct Symtab *sym; } cond maybeguards guards guarded guard nhtis nhti plusterms multterms orterms dotterms gteqeqminus maybeparams params control
+@attributes { struct Tree *tree; struct Symtab *sym; } term maybestats expr
+@attributes { struct Tree *tree; struct Symtab *sym; struct Symtab *sym_up; } stat stats
 
 @traversal symusage
 @traversal @preorder codegen
@@ -73,11 +73,11 @@ pars
 maybestats
     : /* empty */
         @{
-            @i @maybestats.tree@ = NULL;
+            @i @maybestats.tree@ = tree_nil();
         @}
     | stats
         @{
-            @i @maybestats.tree@ = NULL;
+            @i @maybestats.tree@ = @stats.tree@; // TODO autosyn
         @}
     ;
 
@@ -85,22 +85,37 @@ stats
     : stat ';'
         @{
             @i @stats.sym_up@ = @stat.sym_up@;
+            @i @stats.tree@ = tree_new(@stat.tree@, tree_nil(), TREE_STATS); // TODO autosyn
         @}
     | stats stat ';'
         @{
             @i @stat.sym@ = @stats.1.sym_up@;
             @i @stats.sym_up@ = @stat.sym_up@;
+            @i RIGHT_CHILD(@stats.tree@) = tree_new(@stat.tree@, tree_nil(), TREE_STATS);
         @}
     ;
 
 stat
-    : RETURN expr @{ @i @stat.sym_up@ = @stat.sym@; @}
-    | cond @{ @i @stat.sym_up@ = @stat.sym@; @}
-    | VAR ID '=' expr @{ @i @stat.sym_up@ = symtab_variable_declaration(@stat.sym@, @ID.name@); @}
+    : RETURN expr
+        @{
+            @i @stat.sym_up@ = @stat.sym@;
+            @i @stat.tree@ = tree_new(@expr.tree@, NULL, TREE_RETURN);
+        @}
+    | cond
+        @{
+            @i @stat.sym_up@ = @stat.sym@;
+            @i @stat.tree@ = NULL; // TODO
+        @}
+    | VAR ID '=' expr 
+        @{ 
+            @i @stat.sym_up@ = symtab_variable_declaration(@stat.sym@, @ID.name@); 
+            @i @stat.tree@ = NULL; // TODO
+        @}
     | ID '=' expr
         @{
-            @i @stat.sym_up@ = symtab_variable_usage(@stat.sym@, @ID.name@);
             // TODO use symusage traversal instead?
+            @i @stat.sym_up@ = symtab_variable_usage(@stat.sym@, @ID.name@);
+            @i @stat.tree@ = NULL; // TODO
         @}
     ;
 
@@ -153,12 +168,33 @@ control
 
 expr
     : term
+        @{
+            @i @expr.tree@ = @term.tree@;
+        @}
     | nhtis
+        @{
+            @i @expr.tree@ = NULL;
+        @}
     | plusterms
+        @{
+            @i @expr.tree@ = NULL;
+        @}
     | multterms
+        @{
+            @i @expr.tree@ = NULL;
+        @}
     | orterms
+        @{
+            @i @expr.tree@ = NULL;
+        @}
     | dotterms
+        @{
+            @i @expr.tree@ = NULL;
+        @}
     | term gteqeqminus term
+        @{
+            @i @expr.tree@ = NULL;
+        @}
     ;
 
 nhtis
@@ -202,7 +238,7 @@ gteqeqminus
 term
     : '(' expr ')'
         @{
-            @i @term.tree@ = NULL; // TODO
+            @i @term.tree@ = @expr.tree@;
         @}
     | NUM
         @{

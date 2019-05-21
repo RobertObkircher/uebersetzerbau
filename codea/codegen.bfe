@@ -18,13 +18,30 @@ static struct CodeGenContext ctx;
 
 enum Register reg() {
     for (int i = 0; i < REG_COUNT; ++i) {
-        if (ctx.regs[i] == 0) {
-            ctx.regs[i] = 1;
+        if (!ctx.regs[i]) {
+            ctx.regs[i] = true;
             return i;
         }
     }
     printf("out of registers\n");
     exit(1);
+}
+
+static const char* regstr(enum Register reg) {
+    switch(reg) {
+        case RDI: return "rdi";
+        case RSI: return "rsi";
+        case RDX: return "rdx";
+        case RCX: return "rcx";
+        case R8: return "r8";
+        case R9: return "r9";
+        case RAX: return "rax";
+        case R10: return "r10";
+        case R11: return "r11";
+        default:
+            printf("unknown register %d\n", reg);
+            exit(41);
+    }
 }
 
 /* symbols below must also be defined
@@ -41,14 +58,47 @@ con:	ADD(con,con)   # 0 # bnode->number = LEFT_CHILD(bnode)->number + RIGHT_CHIL
 con:	CONST          # 0 # bnode->number = bnode->number;
 */
 
+void reg_from_const(struct Tree *node) {
+    node->reg = reg();
+    const char *to = regstr(node->reg);
+    printf("\tmovq $%d, %%%s\n", node->num, to);
+}
+
+void reg_from_var(struct Tree *node) {
+    struct Reg r = regmap_lookup(ctx.var_to_reg, node->id);
+    const char *from = regstr(r.reg);
+    node->reg = reg();
+    const char *to = regstr(node->reg);
+    printf("\tmovq %%%s, %%%s\n", from, to);
+}
+
 %}
-%term CONST=1 VAR=2 ADDITION=3 SUBTRACTION=4 MULTIPLICATION=5 CONS=6 NOT_LESS=7 EQUAL=8 OR=9 NOT=10 ISLIST=11 HEAD=12 TAIL=13
+%term CONST=1
+%term VAR=2
+%term ADDITION=3
+%term SUBTRACTION=4
+%term MULTIPLICATION=5
+%term CONS=6
+%term NOT_LESS=7
+%term EQUAL=8
+%term OR=9
+%term NOT=10
+%term ISLIST=11
+%term HEAD=12
+%term TAIL=13
+%term STATS=14
+%term RETURN=15
+%term EXPR=16
+%term NIL=17
 
-%start reg
+%start stats
 %%
-
-reg: CONST             # 1 # bnode->reg = reg(); printf("reg: CONST\n");
-
+stats: nil                 # 0 # printf("\tret\n");
+stats: STATS(return,nil)   # 1 #
+return: RETURN(reg)        # 1 # printf("\tmovq %%%s, %%rax\n\tret\n", regstr(LEFT_CHILD(bnode)->reg));
+reg: CONST                 # 1 # reg_from_const(bnode);
+reg: VAR                   # 1 # reg_from_var(bnode);
+nil: NIL                   # 0 # ;
 %%
 
 void burm_reduce(NODEPTR_TYPE bnode, int goalnt);
@@ -71,7 +121,17 @@ void invoke_burm(NODEPTR_TYPE root, char *fn_name, struct Symtab *params) {
         exit(32);
     }
     if(burm_label(root)) {
-        burm_reduce(root, 1);
+        printf("\t.global %s\n", fn_name);
+        printf("\t.type %s, @function\n", fn_name);
+        printf("%s:\n", fn_name);
+        printf("\t.cfi_startproc\n");
+        if (root->node_type == TREE_NIL) {
+            printf("\tret\n");
+        } else {
+            burm_reduce(root, 1);
+        }
+        printf("\t.cfi_endproc\n");
+        printf("\t.size %s, .-%s\n", fn_name, fn_name);
     } else {
         printf("unable to burm_label\n");
         exit(3);
