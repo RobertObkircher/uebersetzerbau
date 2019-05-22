@@ -3,8 +3,8 @@
 
 #define MAP regmap
 #define KEY char*
-#define VALUE struct Reg
-#define NIL (struct Reg) {}
+#define VALUE struct RegInfo
+#define NIL (struct RegInfo) {} // TODO
 #define MAP_IMPLEMENTATION
 #include "map.h"
 

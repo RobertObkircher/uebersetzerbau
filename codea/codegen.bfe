@@ -1,4 +1,5 @@
 %{
+#include "asm.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -27,51 +28,34 @@ enum Register reg() {
     exit(1);
 }
 
-static const char* regstr(enum Register reg) {
-    switch(reg) {
-        case RDI: return "rdi";
-        case RSI: return "rsi";
-        case RDX: return "rdx";
-        case RCX: return "rcx";
-        case R8: return "r8";
-        case R9: return "r9";
-        case RAX: return "rax";
-        case R10: return "r10";
-        case R11: return "r11";
-        default:
-            printf("unknown register %d\n", reg);
-            exit(41);
-    }
+void return__RETURN_numreg(struct Tree *node) {
+    node->reg = LEFT_CHILD(node)->reg;
+    asm_tag_number(node->reg);
+    asm_move_reg_reg(node->reg, RAX);
+    asm_return();
+}
+
+void return__RETURN_lstreg(struct Tree *node) {
+    node->reg = LEFT_CHILD(node)->reg;
+    asm_tag_list(node->reg);
+    asm_move_reg_reg(node->reg, RAX);
+    asm_return();
+}
+
+void numreg__NOT_numreg(struct Tree *node) {
+    node->reg = LEFT_CHILD(node)->reg;
+    asm_xor1(node->reg);
+}
+
+void reg__VAR(struct Tree *node) {
+    struct RegInfo reg_info = regmap_lookup(ctx.var_to_reg, node->id);
+    node->reg = reg();
+    asm_move_reg_reg(reg_info.reg, node->reg);
 }
 
 /* symbols below must also be defined
    definition in tree.h!!!
 */
-
-/*
-expr:   reg            # 1 # printf("\treturn r%d\n",bnode->reg_no);
-reg:    ADD(reg,reg)   # 1 # bnode->reg_no=getreg(); printf("\tr%d = r%d + r%d\n",bnode->reg_no,LEFT_CHILD(bnode)->reg_no,RIGHT_CHILD(bnode)->reg_no);
-reg:    VAR            # 1 # bnode->reg_no=getreg(); printf("\tr%d = var %s\n",bnode->reg_no,bnode->id);
-reg:	CONST          # 1 # bnode->reg_no=getreg(); printf("\tr%d = cons %d\n",bnode->reg_no,bnode->number);
-reg:	con            # 1 # bnode->reg_no=getreg(); printf("\tr%d = cons %d\n",bnode->reg_no,bnode->number);
-con:	ADD(con,con)   # 0 # bnode->number = LEFT_CHILD(bnode)->number + RIGHT_CHILD(bnode)->number;
-con:	CONST          # 0 # bnode->number = bnode->number;
-*/
-
-void reg_from_const(struct Tree *node) {
-    node->reg = reg();
-    const char *to = regstr(node->reg);
-    printf("\tmovq $%d, %%%s\n", node->num, to);
-}
-
-void reg_from_var(struct Tree *node) {
-    struct Reg r = regmap_lookup(ctx.var_to_reg, node->id);
-    const char *from = regstr(r.reg);
-    node->reg = reg();
-    const char *to = regstr(node->reg);
-    printf("\tmovq %%%s, %%%s\n", from, to);
-}
-
 %}
 %term CONST=1
 %term VAR=2
@@ -95,9 +79,14 @@ void reg_from_var(struct Tree *node) {
 %%
 stats: nil                 # 0 # printf("\tret\n");
 stats: STATS(return,nil)   # 1 #
-return: RETURN(reg)        # 1 # printf("\tmovq %%%s, %%rax\n\tret\n", regstr(LEFT_CHILD(bnode)->reg));
-reg: CONST                 # 1 # reg_from_const(bnode);
-reg: VAR                   # 1 # reg_from_var(bnode);
+return: RETURN(reg)        # 1 # asm_return(bnode);
+return: RETURN(numreg)     # 1 # return__RETURN_numreg(bnode);
+return: RETURN(lstreg)     # 1 # return__RETURN_lstreg(bnode);
+numreg: NOT(numreg)        # 1 # numreg__NOT_numreg(bnode);
+numreg: reg                # 1 # asm_untag_number(bnode->reg);
+lstreg: reg                # 1 # asm_untag_list(bnode->reg);
+reg: CONST                 # 1 # asm_immediate(bnode->num, (bnode->reg = reg()));
+reg: VAR                   # 1 # reg__VAR(bnode);
 nil: NIL                   # 0 # ;
 %%
 
@@ -105,7 +94,7 @@ void burm_reduce(NODEPTR_TYPE bnode, int goalnt);
 
 void addParam(char *name) {
     enum Register r = reg();
-    regmap_insert(ctx.var_to_reg, name, (struct Reg) { .reg = r });
+    regmap_insert(ctx.var_to_reg, name, (struct RegInfo) { .reg = r });
     ++ctx.params_count;
 }
 
@@ -122,6 +111,7 @@ void invoke_burm(NODEPTR_TYPE root, char *fn_name, struct Symtab *params) {
     }
     if(burm_label(root)) {
         printf("\t.global %s\n", fn_name);
+        printf("\t.extern raisesig\n", fn_name);
         printf("\t.type %s, @function\n", fn_name);
         printf("%s:\n", fn_name);
         printf("\t.cfi_startproc\n");

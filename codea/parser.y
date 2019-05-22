@@ -29,9 +29,10 @@ extern void invoke_burm(NODEPTR_TYPE root, char *fn_name, struct Symtab *params)
 @attributes { long value; } NUM
 @attributes { char *name; } ID maybelabeldef 
 @attributes { struct Symtab *sym_up; } maybepars pars
-@attributes { struct Symtab *sym; } cond maybeguards guards guarded guard nhtis nhti plusterms multterms orterms dotterms gteqeqminus maybeparams params control
-@attributes { struct Tree *tree; struct Symtab *sym; } term maybestats expr
+@attributes { struct Symtab *sym; } cond maybeguards guards guarded guard plusterms multterms orterms dotterms gteqeqminus maybeparams params control
+@attributes { struct Tree *tree; struct Symtab *sym; } term maybestats expr nhtis 
 @attributes { struct Tree *tree; struct Symtab *sym; struct Symtab *sym_up; } stat stats
+@attributes { int node_type; } nhti 
 
 @traversal symusage
 @traversal @preorder codegen
@@ -173,7 +174,7 @@ expr
         @}
     | nhtis
         @{
-            @i @expr.tree@ = NULL;
+            @i @expr.tree@ = @nhtis.tree@; // TODO autosyn
         @}
     | plusterms
         @{
@@ -199,14 +200,20 @@ expr
 
 nhtis
     : nhti term
+        @{
+            @i @nhtis.tree@ = tree_new(@term.tree@, NULL, @nhti.node_type@);
+        @}
     | nhti nhtis
+        @{
+            @i @nhtis.tree@ = tree_new(@nhtis.1.tree@, NULL, @nhti.node_type@);
+        @}
     ;
 
 nhti
-    : NOT
-    | HEAD
-    | TAIL
-    | ISLIST
+    : NOT @{ @i @nhti.node_type@ = TREE_NOT; @}
+    | HEAD @{ @i @nhti.node_type@ = TREE_HEAD; @}
+    | TAIL @{ @i @nhti.node_type@ = TREE_TAIL; @}
+    | ISLIST @{ @i @nhti.node_type@ = TREE_ISLIST; @}
     ;
 
 plusterms
