@@ -45,7 +45,6 @@ enum Type {
     TREE_HEAD,
     TREE_TAIL,
 
-    TREE_STATS, // (return|cond|assign|decl, stats)
     TREE_RETURN, // (expr, NULL)                
     TREE_EXPR, // binary or unary
 

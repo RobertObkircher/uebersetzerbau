@@ -1,2 +1,2 @@
 extern long f();
-RET(f() == 14);
+RET(f() == 14<<1);

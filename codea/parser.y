@@ -19,7 +19,10 @@ int yyerror(char *e) {
     exit(2);
 }
 
-extern void invoke_burm(NODEPTR_TYPE root, char *fn_name, struct Symtab *params);
+void codegen_begin_function(char *fn_name, struct Symtab *params);
+void codegen_end_function();
+void codegen_empty_function();
+void codegen_statement(NODEPTR_TYPE root);
 
 %}
 
@@ -29,13 +32,14 @@ extern void invoke_burm(NODEPTR_TYPE root, char *fn_name, struct Symtab *params)
 @attributes { long value; } NUM
 @attributes { char *name; } ID maybelabeldef 
 @attributes { struct Symtab *sym_up; } maybepars pars
-@attributes { struct Symtab *sym; } cond maybeguards guards guarded guard dotterms gteqeqminus maybeparams params control
-@attributes { struct Tree *tree; struct Symtab *sym; } term maybestats expr nhtis plusterms multterms orterms 
-@attributes { struct Tree *tree; struct Symtab *sym; struct Symtab *sym_up; } stat stats
+@attributes { struct Symtab *sym; } cond maybeguards guards guarded guard dotterms gteqeqminus maybeparams params control maybestats 
+@attributes { struct Tree *tree; struct Symtab *sym; } term expr nhtis plusterms multterms orterms 
+@attributes { struct Symtab *sym; struct Symtab *sym_up; } stats
+@attributes { struct Tree *tree; struct Symtab *sym; struct Symtab *sym_up; } stat
 @attributes { int node_type; } nhti 
 
 @traversal symusage
-@traversal @preorder codegen
+@traversal @postorder codegen
 
 %%
 
@@ -48,7 +52,8 @@ funcdef
     : ID '(' maybepars ')' maybestats END
         @{
             @i @maybestats.sym@ = symtab_new_clone(@maybepars.sym_up@);
-            @codegen invoke_burm(@maybestats.tree@, @ID.name@, @maybepars.sym_up@);
+            @codegen @revorder(1) codegen_begin_function(@ID.name@, @maybepars.sym_up@);
+            @codegen codegen_end_function();
         @}
     ;
 
@@ -74,7 +79,7 @@ pars
 maybestats
     : /* empty */
         @{
-            @i @maybestats.tree@ = tree_nil();
+            @codegen codegen_empty_function();
         @}
     | stats
     ;
@@ -83,13 +88,13 @@ stats
     : stat ';'
         @{
             @i @stats.sym_up@ = @stat.sym_up@;
-            @i @stats.tree@ = tree_new(@stat.tree@, tree_nil(), TREE_STATS);
+            @codegen codegen_statement(@stat.tree@);
         @}
     | stats stat ';'
         @{
             @i @stat.sym@ = @stats.1.sym_up@;
             @i @stats.sym_up@ = @stat.sym_up@;
-            @i @stats.tree@ = tree_new(@stats.tree@, @stat.tree@, TREE_STATS);
+            @codegen codegen_statement(@stat.tree@);
         @}
     ;
 

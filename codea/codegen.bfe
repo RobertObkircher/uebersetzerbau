@@ -176,15 +176,13 @@ void reg__VAR(struct Tree *node) {
 %term ISLIST=11
 %term HEAD=12
 %term TAIL=13
-%term STATS=14
-%term RETURN=15
-%term EXPR=16
-%term NIL=17
+%term RETURN=14
+%term EXPR=15
+%term NIL=16
 
-%start stats
+%start stat
 %%
-stats: nil                        # 0    # printf("\tret\n");
-stats: STATS(return,nil)          # 1    #
+stat: return                      # 0    #
 return: RETURN(reg)               # 1    # return__RETURN(bnode);
 return: RETURN(numreg)            # 1    # return__RETURN_numreg(bnode);
 return: RETURN(lstreg)            # 1    # return__RETURN_lstreg(bnode);
@@ -211,10 +209,9 @@ errreg: lstreg                    # 1000 #
 numreg: reg                       # 1    # asm_untag_number(bnode->reg);
 lstreg: reg                       # 1    # asm_untag_list(bnode->reg);
 const: CONST                      # 0    #
-reg: CONST                        # 1    # asm_immediate(bnode->num, (bnode->reg = reg()));
-reg: const                        # 1    # asm_immediate(bnode->num, (bnode->reg = reg()));
+reg: CONST                        # 1    # asm_immediate(bnode->num<<1, (bnode->reg=reg()));
+reg: const                        # 1    # asm_immediate(bnode->num<<1, (bnode->reg=reg()));
 reg: VAR                          # 1    # reg__VAR(bnode);
-nil: NIL                          # 0    # ;
 %%
 
 void burm_reduce(NODEPTR_TYPE bnode, int goalnt);
@@ -225,7 +222,7 @@ void addParam(char *name) {
     ++ctx.params_count;
 }
 
-void invoke_burm(NODEPTR_TYPE root, char *fn_name, struct Symtab *params) {
+void codegen_begin_function(char *fn_name, struct Symtab *params) {
     ctx = (struct CodeGenContext) {
         .fn_name = fn_name,
         .var_to_reg = regmap_new(),
@@ -236,20 +233,27 @@ void invoke_burm(NODEPTR_TYPE root, char *fn_name, struct Symtab *params) {
         printf("too many params\n");
         exit(32);
     }
-    if(burm_label(root)) {
-        printf("\t.extern raisesig\n", fn_name);
 
-        printf("\t.global %s\n", fn_name);
-        printf("\t.type %s, @function\n", fn_name);
-        printf("%s:\n", fn_name);
-        printf("\t.cfi_startproc\n");
-        if (root->node_type == TREE_NIL) {
-            printf("\tret\n");
-        } else {
-            burm_reduce(root, 1);
-        }
-        printf("\t.cfi_endproc\n");
-        printf("\t.size %s, .-%s\n", fn_name, fn_name);
+    printf("\t.extern raisesig\n", fn_name);
+
+    printf("\t.global %s\n", fn_name);
+    printf("\t.type %s, @function\n", fn_name);
+    printf("%s:\n", fn_name);
+    printf("\t.cfi_startproc\n");
+}
+
+void codegen_end_function() {
+    printf("\t.cfi_endproc\n");
+    printf("\t.size %s, .-%s\n", ctx.fn_name, ctx.fn_name);
+}
+
+void codegen_empty_function() {
+    printf("\tret\n");
+}
+
+void codegen_statement(NODEPTR_TYPE root) {
+    if(burm_label(root)) {
+        burm_reduce(root, 1);
     } else {
         printf("unable to burm_label\n");
         exit(3);
