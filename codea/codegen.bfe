@@ -28,23 +28,58 @@ enum Register reg() {
     exit(1);
 }
 
-void return__RETURN_numreg(struct Tree *node) {
+void free_reg(enum Register r) {
+    ctx.regs[r] = false;
+}
+
+void flip(struct Tree *node) {
+    struct Tree *tmp = node->kids[0];
+    node->kids[0] = node->kids[1];
+    node->kids[1] = node->kids[0];
+}
+
+void return__RETURN(struct Tree *node) {
     node->reg = LEFT_CHILD(node)->reg;
-    asm_tag_number(node->reg);
     asm_move_reg_reg(node->reg, RAX);
     asm_return();
 }
 
+void return__RETURN_numreg(struct Tree *node) {
+    asm_tag_number(LEFT_CHILD(node)->reg);
+    return__RETURN(node);
+}
+
 void return__RETURN_lstreg(struct Tree *node) {
-    node->reg = LEFT_CHILD(node)->reg;
-    asm_tag_list(node->reg);
-    asm_move_reg_reg(node->reg, RAX);
-    asm_return();
+    asm_tag_list(LEFT_CHILD(node)->reg);
+    return__RETURN(node);
 }
 
 void numreg__NOT_numreg(struct Tree *node) {
     node->reg = LEFT_CHILD(node)->reg;
     asm_xor1(node->reg);
+}
+
+void numreg__ADDITION_numreg_numreg(struct Tree *node) {
+    enum Register source = LEFT_CHILD(node)->reg;
+    enum Register target = RIGHT_CHILD(node)->reg;
+    asm_add(source, target);
+    node->reg = target;
+    free_reg(source);
+}
+
+void numreg__ADDITION_const_numreg(struct Tree *node) {
+    enum Register target = RIGHT_CHILD(node)->reg;
+    asm_add_immediate(LEFT_CHILD(node)->num, target);
+    node->reg = target;
+}
+
+void numreg__ADDITION_numreg_const(struct Tree *node) {
+    flip(node);
+    numreg__ADDITION_const_numreg(node);
+}
+
+void numreg__ADDITION_const_const(struct Tree *node) {
+    node->num = LEFT_CHILD(node)->num + RIGHT_CHILD(node)->num;
 }
 
 void reg__VAR(struct Tree *node) {
@@ -77,17 +112,28 @@ void reg__VAR(struct Tree *node) {
 
 %start stats
 %%
-stats: nil                 # 0 # printf("\tret\n");
-stats: STATS(return,nil)   # 1 #
-return: RETURN(reg)        # 1 # asm_return(bnode);
-return: RETURN(numreg)     # 1 # return__RETURN_numreg(bnode);
-return: RETURN(lstreg)     # 1 # return__RETURN_lstreg(bnode);
-numreg: NOT(numreg)        # 1 # numreg__NOT_numreg(bnode);
-numreg: reg                # 1 # asm_untag_number(bnode->reg);
-lstreg: reg                # 1 # asm_untag_list(bnode->reg);
-reg: CONST                 # 1 # asm_immediate(bnode->num, (bnode->reg = reg()));
-reg: VAR                   # 1 # reg__VAR(bnode);
-nil: NIL                   # 0 # ;
+stats: nil                        # 0    # printf("\tret\n");
+stats: STATS(return,nil)          # 1    #
+return: RETURN(reg)               # 1    # return__RETURN(bnode);
+return: RETURN(numreg)            # 1    # return__RETURN_numreg(bnode);
+return: RETURN(lstreg)            # 1    # return__RETURN_lstreg(bnode);
+numreg: NOT(numreg)               # 1    # numreg__NOT_numreg(bnode);
+numreg: NOT(errreg)               # 1000 # asm_raisesig();
+numreg: ADDITION(numreg, numreg)  # 1    # numreg__ADDITION_numreg_numreg(bnode);
+numreg: ADDITION(const, numreg)   # 1    # numreg__ADDITION_const_numreg(bnode);
+numreg: ADDITION(numreg, const)   # 1    # numreg__ADDITION_numreg_const(bnode);
+const:  ADDITION(const, const)    # 0    # numreg__ADDITION_const_const(bnode);
+numreg: ADDITION(errreg, errreg)  # 1000 # asm_raisesig();
+errreg: reg                       # 1000 #
+errreg: numreg                    # 1000 #
+errreg: lstreg                    # 1000 #
+numreg: reg                       # 1    # asm_untag_number(bnode->reg);
+lstreg: reg                       # 1    # asm_untag_list(bnode->reg);
+const: CONST                      # 0    #
+reg: CONST                        # 1    # asm_immediate(bnode->num, (bnode->reg = reg()));
+reg: const                        # 1    # asm_immediate(bnode->num, (bnode->reg = reg()));
+reg: VAR                          # 1    # reg__VAR(bnode);
+nil: NIL                          # 0    # ;
 %%
 
 void burm_reduce(NODEPTR_TYPE bnode, int goalnt);

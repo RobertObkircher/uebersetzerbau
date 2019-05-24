@@ -27,6 +27,10 @@ void asm_immediate(unsigned long long value, enum Register target);
 
 void asm_xor1(enum Register target);
 
+void asm_add(enum Register source, enum Register target);
+void asm_add_immediate(unsigned long long value, enum Register target);
+
 void asm_return();
+void asm_raisesig();
 
 #endif

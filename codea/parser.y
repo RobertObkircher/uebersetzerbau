@@ -29,8 +29,8 @@ extern void invoke_burm(NODEPTR_TYPE root, char *fn_name, struct Symtab *params)
 @attributes { long value; } NUM
 @attributes { char *name; } ID maybelabeldef 
 @attributes { struct Symtab *sym_up; } maybepars pars
-@attributes { struct Symtab *sym; } cond maybeguards guards guarded guard plusterms multterms orterms dotterms gteqeqminus maybeparams params control
-@attributes { struct Tree *tree; struct Symtab *sym; } term maybestats expr nhtis 
+@attributes { struct Symtab *sym; } cond maybeguards guards guarded guard multterms orterms dotterms gteqeqminus maybeparams params control
+@attributes { struct Tree *tree; struct Symtab *sym; } term maybestats expr nhtis plusterms 
 @attributes { struct Tree *tree; struct Symtab *sym; struct Symtab *sym_up; } stat stats
 @attributes { int node_type; } nhti 
 
@@ -178,7 +178,7 @@ expr
         @}
     | plusterms
         @{
-            @i @expr.tree@ = NULL;
+            @i @expr.tree@ = @plusterms.tree@; // TODO autosyn
         @}
     | multterms
         @{
@@ -218,7 +218,13 @@ nhti
 
 plusterms
     : term '+' term
+        @{
+            @i @plusterms.tree@ = tree_new(@term.tree@, @term.1.tree@, TREE_ADDITION);
+        @}
     | plusterms '+' term
+        @{
+            @i @plusterms.tree@ = tree_new(@plusterms.1.tree@, @term.tree@, TREE_ADDITION);
+        @}
     ;
 
 multterms

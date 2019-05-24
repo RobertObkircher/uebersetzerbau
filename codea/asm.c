@@ -1,5 +1,7 @@
 #include "asm.h"
 #include "regmap.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 const char* regstr(enum Register reg) {
     switch(reg) {
@@ -57,6 +59,17 @@ void asm_xor1(enum Register target) {
     printf("\txor $1, %%%s\n", to);
 }
 
+void asm_add(enum Register source, enum Register target) {
+    const char *from = regstr(source);
+    const char *to = regstr(target);
+    printf("\tadd %%%s, %%%s\n", from, to);
+}
+
+void asm_add_immediate(unsigned long long value, enum Register target) {
+    const char *to = regstr(target);
+    printf("\tadd %d, %%%s\n", value, to);
+}
+
 void asm_immediate(unsigned long long value, enum Register target) {
     const char *to = regstr(target);
     printf("\tmovq $%d, %%%s\n", value, to);
@@ -64,4 +77,8 @@ void asm_immediate(unsigned long long value, enum Register target) {
 
 void asm_return() {
     printf("\tret\n");
+}
+
+void asm_raisesig() {
+    printf("\tjmp raisesig\n");
 }
