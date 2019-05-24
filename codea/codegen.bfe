@@ -59,12 +59,40 @@ void return__RETURN_lstreg(struct Tree *node) {
 }
 
 //
-// NOT
+// NOT, HEAD, TAIL
 //
 
 void numreg__NOT_numreg(struct Tree *node) {
     node->reg = LEFT_CHILD(node)->reg;
-    asm_xor1(node->reg);
+    asm_xor_immediate(1, node->reg);
+}
+
+void numreg__HEAD_lstreg(struct Tree *node) {
+    asm_move_head_reg(node->reg);
+}
+
+void numreg__TAIL_lstreg(struct Tree *node) {
+    asm_move_head_reg(node->reg);
+}
+
+//
+// ISLIST
+//
+
+void numreg__ISLIST_reg(struct Tree *node) {
+    asm_and_immediate(1, node->reg);
+}
+
+void const__ISLIST_const(struct Tree *node) {
+    node->num = 0;
+}
+
+void numreg__ISLIST_lstreg(struct Tree *node) {
+    asm_immediate(1, node->reg);
+}
+
+void numreg__ISLIST_numreg(struct Tree *node) {
+    asm_immediate(0, node->reg);
 }
 
 //
@@ -174,6 +202,15 @@ return: RETURN(numreg)            # 1    # return__RETURN_numreg(bnode);
 return: RETURN(lstreg)            # 1    # return__RETURN_lstreg(bnode);
 numreg: NOT(numreg)               # 1    # numreg__NOT_numreg(bnode);
 numreg: NOT(errreg)               # 1000 # asm_raisesig();
+numreg: HEAD(lstreg)              # 1    # numreg__HEAD_lstreg(bnode);
+numreg: HEAD(errreg)              # 1000 # asm_raisesig();
+numreg: TAIL(lstreg)              # 1    # numreg__TAIL_lstreg(bnode);
+numreg: TAIL(errreg)              # 1000 # asm_raisesig();
+numreg: ISLIST(reg)               # 1    # numreg__ISLIST_reg(bnode);
+const:  ISLIST(const)             # 1    # const__ISLIST_const(bnode);
+numreg: ISLIST(lstreg)            # 1    # numreg__ISLIST_lstreg(bnode);
+numreg: ISLIST(numreg)            # 1    # numreg__ISLIST_numreg(bnode);
+numreg: ISLIST(erreg)             # 1000 # asm_raisesig();
 numreg: ADD(numreg, numreg)       # 1    # numreg__BIN_numreg_numreg(bnode, TREE_ADD);
 numreg: ADD(const, numreg)        # 1    # numreg__BIN_const_numreg(bnode, TREE_ADD);
 numreg: ADD(numreg, const)        # 1    # numreg__BIN_numreg_const(bnode, TREE_ADD);

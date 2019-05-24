@@ -32,8 +32,8 @@ void codegen_statement(NODEPTR_TYPE root);
 @attributes { long value; } NUM
 @attributes { char *name; } ID maybelabeldef 
 @attributes { struct Symtab *sym_up; } maybepars pars
-@attributes { struct Symtab *sym; } cond maybeguards guards guarded guard dotterms maybeparams params control maybestats 
-@attributes { struct Tree *tree; struct Symtab *sym; } term expr nhtis plusterms multterms orterms 
+@attributes { struct Symtab *sym; } cond maybeguards guards guarded guard maybeparams params control maybestats 
+@attributes { struct Tree *tree; struct Symtab *sym; } term expr nhtis plusterms multterms orterms dotterms 
 @attributes { struct Symtab *sym; struct Symtab *sym_up; } stats
 @attributes { struct Tree *tree; struct Symtab *sym; struct Symtab *sym_up; } stat
 @attributes { int node_type; } nhti geeqsub 
@@ -238,7 +238,13 @@ orterms
 
 dotterms
     : term '.' term
-    | dotterms '.' term
+        @{
+            @i @dotterms.tree@ = tree_new(@term.tree@, @term.1.tree@, TREE_CONS);
+        @}
+    | term '.' dotterms
+        @{
+            @i @dotterms.tree@ = tree_new(@term.tree@, @dotterms.1.tree@, TREE_CONS);
+        @}
     ;
 
 geeqsub

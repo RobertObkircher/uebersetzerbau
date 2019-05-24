@@ -71,9 +71,14 @@ void asm_move_reg_reg(enum Register source, enum Register target) {
     }
 }
 
-void asm_xor1(enum Register target) {
+void asm_xor_immediate(unsigned long long value, enum Register target) {
     const char *to = regstr(target);
-    printf("\txor $1, %%%s\n", to);
+    printf("\txor $%d, %%%s\n", value, to);
+}
+
+void asm_and_immediate(unsigned long long value, enum Register target) {
+    const char *to = regstr(target);
+    printf("\tand $%d, %%%s\n", value, to);
 }
 
 void asm_add(enum Register source, enum Register target) {
@@ -174,4 +179,14 @@ void asm_return() {
 
 void asm_raisesig() {
     printf("\tjmp raisesig\n");
+}
+
+void asm_move_head_reg(enum Register target) {
+    const char *to = regstr(target);
+    printf("\tmovq (%%%s), %%%s\n", to, to);
+}
+
+void asm_move_tail_reg(enum Register target) {
+    const char *to = regstr(target);
+    printf("\tmovq 8(%%%s), %%%s\n", to, to);
 }

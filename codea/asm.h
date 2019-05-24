@@ -25,7 +25,8 @@ void asm_tag_list(enum Register target);
 void asm_move_reg_reg(enum Register source, enum Register target);
 void asm_immediate(unsigned long long value, enum Register target);
 
-void asm_xor1(enum Register target);
+void asm_xor_immediate(unsigned long long value, enum Register target);
+void asm_and_immediate(unsigned long long value, enum Register target);
 
 void asm_add(enum Register source, enum Register target);
 void asm_add_immediate(unsigned long long value, enum Register target);
@@ -48,5 +49,8 @@ void asm_le_immediate(unsigned long long value, enum Register target);
 
 void asm_return();
 void asm_raisesig();
+
+void asm_move_head_reg(enum Register target);
+void asm_move_tail_reg(enum Register target);
 
 #endif
