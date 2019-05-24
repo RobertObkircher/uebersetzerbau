@@ -35,8 +35,8 @@ enum Type {
     TREE_SUB,
     TREE_MUL,
     TREE_CONS,
-    TREE_NOT_LESS,
-    TREE_EQUAL,
+    TREE_GE,
+    TREE_EQ,
     TREE_OR,
 
     // unary:

@@ -1,5 +1,5 @@
 %token END RETURN VAR COND CONTINUE BREAK NOT HEAD TAIL ISLIST OR
-%token ';' '(' ')' ',' '=' ':' GUARD '+' '*' '.' GREQ '-'
+%token ';' '(' ')' ',' '=' ':' GUARD '+' '*' '.' GE '-'
 %token ID NUM
 %start program
 
@@ -32,11 +32,11 @@ void codegen_statement(NODEPTR_TYPE root);
 @attributes { long value; } NUM
 @attributes { char *name; } ID maybelabeldef 
 @attributes { struct Symtab *sym_up; } maybepars pars
-@attributes { struct Symtab *sym; } cond maybeguards guards guarded guard dotterms gteqeqminus maybeparams params control maybestats 
+@attributes { struct Symtab *sym; } cond maybeguards guards guarded guard dotterms maybeparams params control maybestats 
 @attributes { struct Tree *tree; struct Symtab *sym; } term expr nhtis plusterms multterms orterms 
 @attributes { struct Symtab *sym; struct Symtab *sym_up; } stats
 @attributes { struct Tree *tree; struct Symtab *sym; struct Symtab *sym_up; } stat
-@attributes { int node_type; } nhti 
+@attributes { int node_type; } nhti geeqsub 
 
 @traversal symusage
 @traversal @postorder codegen
@@ -179,9 +179,9 @@ expr
         @{
             @i @expr.tree@ = NULL;
         @}
-    | term gteqeqminus term
+    | term geeqsub term
         @{
-            @i @expr.tree@ = NULL;
+            @i @expr.tree@ = tree_new(@term.tree@, @term.1.tree@, @geeqsub.node_type@);
         @}
     ;
 
@@ -241,10 +241,10 @@ dotterms
     | dotterms '.' term
     ;
 
-gteqeqminus
-    : GREQ 
-    | '='
-    | '-'
+geeqsub
+    : GE  @{ @i @geeqsub.node_type@ = TREE_GE;  @}
+    | '=' @{ @i @geeqsub.node_type@ = TREE_EQ;  @}
+    | '-' @{ @i @geeqsub.node_type@ = TREE_SUB; @}
     ;
 
 term

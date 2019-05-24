@@ -22,7 +22,7 @@ int line_number = 1;
 "islist"    return ISLIST;
 "or"        return OR;
 "->"        return GUARD;
-">="        return GREQ;
+">="        return GE;
 ";"         return ';';
 "("         return '(';
 ")"         return ')';

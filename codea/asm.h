@@ -9,9 +9,9 @@ enum Register {
     RCX, /* 4 */
     R8,  /* 5 */
     R9,  /* 6 */
-    RAX,
     R10,
     R11,
+    RAX, /* last, so it is usually available for the last allocation */
     REG_COUNT,
 };
 
@@ -35,6 +35,16 @@ void asm_mul_immediate(unsigned long long value, enum Register target);
 
 void asm_or(enum Register source, enum Register target);
 void asm_or_immediate(unsigned long long value, enum Register target);
+
+void asm_sub(enum Register source, enum Register target);
+void asm_sub_immediate(unsigned long long value, enum Register target);
+void asm_neg(enum Register target);
+
+void asm_ge(enum Register source, enum Register target);
+void asm_ge_immediate(unsigned long long value, enum Register target);
+
+void asm_le(enum Register source, enum Register target);
+void asm_le_immediate(unsigned long long value, enum Register target);
 
 void asm_return();
 void asm_raisesig();
