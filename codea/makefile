@@ -1,5 +1,7 @@
+CFLAGS = -DEBUG -g
+
 codea: y.tab.c y.tab.h lex.yy.c symtab.o symmap.o regmap.o tree.o allocation.o codegen.o asm.o
-	gcc -o codea y.tab.h y.tab.c lex.yy.c *.o -lfl
+	$(CC) -o codea y.tab.h y.tab.c lex.yy.c *.o -lfl
 
 oxout.y oxout.l: parser.y scanner.l
 	ox parser.y scanner.l

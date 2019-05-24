@@ -23,14 +23,14 @@ extern void invoke_burm(NODEPTR_TYPE root, char *fn_name, struct Symtab *params)
 
 %}
 
-@autosyn name sym_up
+@autosyn name sym_up tree
 @autoinh sym
 
 @attributes { long value; } NUM
 @attributes { char *name; } ID maybelabeldef 
 @attributes { struct Symtab *sym_up; } maybepars pars
-@attributes { struct Symtab *sym; } cond maybeguards guards guarded guard orterms dotterms gteqeqminus maybeparams params control
-@attributes { struct Tree *tree; struct Symtab *sym; } term maybestats expr nhtis plusterms multterms 
+@attributes { struct Symtab *sym; } cond maybeguards guards guarded guard dotterms gteqeqminus maybeparams params control
+@attributes { struct Tree *tree; struct Symtab *sym; } term maybestats expr nhtis plusterms multterms orterms 
 @attributes { struct Tree *tree; struct Symtab *sym; struct Symtab *sym_up; } stat stats
 @attributes { int node_type; } nhti 
 
@@ -77,22 +77,19 @@ maybestats
             @i @maybestats.tree@ = tree_nil();
         @}
     | stats
-        @{
-            @i @maybestats.tree@ = @stats.tree@; // TODO autosyn
-        @}
     ;
 
 stats
     : stat ';'
         @{
             @i @stats.sym_up@ = @stat.sym_up@;
-            @i @stats.tree@ = tree_new(@stat.tree@, tree_nil(), TREE_STATS); // TODO autosyn
+            @i @stats.tree@ = tree_new(@stat.tree@, tree_nil(), TREE_STATS);
         @}
     | stats stat ';'
         @{
             @i @stat.sym@ = @stats.1.sym_up@;
             @i @stats.sym_up@ = @stat.sym_up@;
-            @i RIGHT_CHILD(@stats.tree@) = tree_new(@stat.tree@, tree_nil(), TREE_STATS);
+            @i @stats.tree@ = tree_new(@stats.tree@, @stat.tree@, TREE_STATS);
         @}
     ;
 
@@ -169,25 +166,10 @@ control
 
 expr
     : term
-        @{
-            @i @expr.tree@ = @term.tree@;
-        @}
     | nhtis
-        @{
-            @i @expr.tree@ = @nhtis.tree@; // TODO autosyn
-        @}
     | plusterms
-        @{
-            @i @expr.tree@ = @plusterms.tree@; // TODO autosyn
-        @}
     | multterms
-        @{
-            @i @expr.tree@ = @multterms.tree@; // TODO autosyn
-        @}
     | orterms
-        @{
-            @i @expr.tree@ = NULL;
-        @}
     | dotterms
         @{
             @i @expr.tree@ = NULL;
@@ -210,9 +192,9 @@ nhtis
     ;
 
 nhti
-    : NOT @{ @i @nhti.node_type@ = TREE_NOT; @}
-    | HEAD @{ @i @nhti.node_type@ = TREE_HEAD; @}
-    | TAIL @{ @i @nhti.node_type@ = TREE_TAIL; @}
+    : NOT    @{ @i @nhti.node_type@ = TREE_NOT;    @}
+    | HEAD   @{ @i @nhti.node_type@ = TREE_HEAD;   @}
+    | TAIL   @{ @i @nhti.node_type@ = TREE_TAIL;   @}
     | ISLIST @{ @i @nhti.node_type@ = TREE_ISLIST; @}
     ;
 
@@ -240,7 +222,13 @@ multterms
 
 orterms
     : term OR term
+        @{
+            @i @orterms.tree@ = tree_new(@term.tree@, @term.1.tree@, TREE_OR);
+        @}
     | orterms OR term
+        @{
+            @i @orterms.tree@ = tree_new(@orterms.1.tree@, @term.tree@, TREE_OR);
+        @}
     ;
 
 dotterms

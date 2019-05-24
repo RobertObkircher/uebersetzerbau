@@ -122,6 +122,34 @@ void numreg__MUL_const_const(struct Tree *node) {
 }
 
 //
+// OR
+//
+// TODO OR could also operate on tagged values (AND and MUL too)
+
+void numreg__OR_numreg_numreg(struct Tree *node) {
+    enum Register source = LEFT_CHILD(node)->reg;
+    enum Register target = RIGHT_CHILD(node)->reg;
+    asm_or(source, target);
+    node->reg = target;
+    free_reg(source);
+}
+
+void numreg__OR_const_numreg(struct Tree *node) {
+    enum Register target = RIGHT_CHILD(node)->reg;
+    asm_or_immediate(LEFT_CHILD(node)->num, target);
+    node->reg = target;
+}
+
+void numreg__OR_numreg_const(struct Tree *node) {
+    flip(node);
+    numreg__OR_const_numreg(node);
+}
+
+void numreg__OR_const_const(struct Tree *node) {
+    node->num = LEFT_CHILD(node)->num | RIGHT_CHILD(node)->num;
+}
+
+//
 // VAR
 //
 
@@ -162,16 +190,21 @@ return: RETURN(numreg)            # 1    # return__RETURN_numreg(bnode);
 return: RETURN(lstreg)            # 1    # return__RETURN_lstreg(bnode);
 numreg: NOT(numreg)               # 1    # numreg__NOT_numreg(bnode);
 numreg: NOT(errreg)               # 1000 # asm_raisesig();
-numreg: ADD(numreg, numreg)  # 1    # numreg__ADD_numreg_numreg(bnode);
-numreg: ADD(const, numreg)   # 1    # numreg__ADD_const_numreg(bnode);
-numreg: ADD(numreg, const)   # 1    # numreg__ADD_numreg_const(bnode);
-const:  ADD(const, const)    # 0    # numreg__ADD_const_const(bnode);
-numreg: ADD(errreg, errreg)  # 1000 # asm_raisesig();
-numreg: MUL(numreg, numreg)  # 1    # numreg__MUL_numreg_numreg(bnode);
-numreg: MUL(const, numreg)   # 1    # numreg__MUL_const_numreg(bnode);
-numreg: MUL(numreg, const)   # 1    # numreg__MUL_numreg_const(bnode);
-const:  MUL(const, const)    # 0    # numreg__MUL_const_const(bnode);
-numreg: MUL(errreg, errreg)  # 1000 # asm_raisesig();
+numreg: ADD(numreg, numreg)       # 1    # numreg__ADD_numreg_numreg(bnode);
+numreg: ADD(const, numreg)        # 1    # numreg__ADD_const_numreg(bnode);
+numreg: ADD(numreg, const)        # 1    # numreg__ADD_numreg_const(bnode);
+const:  ADD(const, const)         # 0    # numreg__ADD_const_const(bnode);
+numreg: ADD(errreg, errreg)       # 1000 # asm_raisesig();
+numreg: MUL(numreg, numreg)       # 1    # numreg__MUL_numreg_numreg(bnode);
+numreg: MUL(const, numreg)        # 1    # numreg__MUL_const_numreg(bnode);
+numreg: MUL(numreg, const)        # 1    # numreg__MUL_numreg_const(bnode);
+const:  MUL(const, const)         # 0    # numreg__MUL_const_const(bnode);
+numreg: MUL(errreg, errreg)       # 1000 # asm_raisesig();
+numreg: OR(numreg, numreg)        # 1    # numreg__OR_numreg_numreg(bnode);
+numreg: OR(const, numreg)         # 1    # numreg__OR_const_numreg(bnode);
+numreg: OR(numreg, const)         # 1    # numreg__OR_numreg_const(bnode);
+const:  OR(const, const)          # 0    # numreg__OR_const_const(bnode);
+numreg: OR(errreg, errreg)        # 1000 # asm_raisesig();
 errreg: reg                       # 1000 #
 errreg: numreg                    # 1000 #
 errreg: lstreg                    # 1000 #

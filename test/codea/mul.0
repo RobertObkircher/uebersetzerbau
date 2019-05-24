@@ -1,2 +1,2 @@
-f(x) return x*2; end;
+f(x) return (4*5*x)*2*(x*x); end;
 

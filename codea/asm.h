@@ -33,6 +33,9 @@ void asm_add_immediate(unsigned long long value, enum Register target);
 void asm_mul(enum Register source, enum Register target);
 void asm_mul_immediate(unsigned long long value, enum Register target);
 
+void asm_or(enum Register source, enum Register target);
+void asm_or_immediate(unsigned long long value, enum Register target);
+
 void asm_return();
 void asm_raisesig();
 

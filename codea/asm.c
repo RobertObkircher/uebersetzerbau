@@ -85,6 +85,19 @@ void asm_mul_immediate(unsigned long long value, enum Register target) {
     }
 }
 
+void asm_or(enum Register source, enum Register target) {
+    const char *from = regstr(source);
+    const char *to = regstr(target);
+    printf("\tor %%%s, %%%s\n", from, to);
+}
+
+void asm_or_immediate(unsigned long long value, enum Register target) {
+    if (value != 1) {
+        const char *to = regstr(target);
+        printf("\tor $%d, %%%s\n", value, to);
+    }
+}
+
 void asm_immediate(unsigned long long value, enum Register target) {
     const char *to = regstr(target);
     printf("\tmovq $%d, %%%s\n", value, to);
