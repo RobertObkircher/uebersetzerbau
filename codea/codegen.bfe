@@ -35,8 +35,12 @@ void free_reg(enum Register r) {
 void flip(struct Tree *node) {
     struct Tree *tmp = node->kids[0];
     node->kids[0] = node->kids[1];
-    node->kids[1] = node->kids[0];
+    node->kids[1] = tmp;
 }
+
+//
+// RETURN
+//
 
 void return__RETURN(struct Tree *node) {
     node->reg = LEFT_CHILD(node)->reg;
@@ -54,12 +58,20 @@ void return__RETURN_lstreg(struct Tree *node) {
     return__RETURN(node);
 }
 
+//
+// NOT
+//
+
 void numreg__NOT_numreg(struct Tree *node) {
     node->reg = LEFT_CHILD(node)->reg;
     asm_xor1(node->reg);
 }
 
-void numreg__ADDITION_numreg_numreg(struct Tree *node) {
+//
+// ADD
+//
+
+void numreg__ADD_numreg_numreg(struct Tree *node) {
     enum Register source = LEFT_CHILD(node)->reg;
     enum Register target = RIGHT_CHILD(node)->reg;
     asm_add(source, target);
@@ -67,20 +79,51 @@ void numreg__ADDITION_numreg_numreg(struct Tree *node) {
     free_reg(source);
 }
 
-void numreg__ADDITION_const_numreg(struct Tree *node) {
+void numreg__ADD_const_numreg(struct Tree *node) {
     enum Register target = RIGHT_CHILD(node)->reg;
     asm_add_immediate(LEFT_CHILD(node)->num, target);
     node->reg = target;
 }
 
-void numreg__ADDITION_numreg_const(struct Tree *node) {
+void numreg__ADD_numreg_const(struct Tree *node) {
     flip(node);
-    numreg__ADDITION_const_numreg(node);
+    numreg__ADD_const_numreg(node);
 }
 
-void numreg__ADDITION_const_const(struct Tree *node) {
+void numreg__ADD_const_const(struct Tree *node) {
     node->num = LEFT_CHILD(node)->num + RIGHT_CHILD(node)->num;
 }
+
+//
+// MUL
+//
+
+void numreg__MUL_numreg_numreg(struct Tree *node) {
+    enum Register source = LEFT_CHILD(node)->reg;
+    enum Register target = RIGHT_CHILD(node)->reg;
+    asm_mul(source, target);
+    node->reg = target;
+    free_reg(source);
+}
+
+void numreg__MUL_const_numreg(struct Tree *node) {
+    enum Register target = RIGHT_CHILD(node)->reg;
+    asm_mul_immediate(LEFT_CHILD(node)->num, target);
+    node->reg = target;
+}
+
+void numreg__MUL_numreg_const(struct Tree *node) {
+    flip(node);
+    numreg__MUL_const_numreg(node);
+}
+
+void numreg__MUL_const_const(struct Tree *node) {
+    node->num = LEFT_CHILD(node)->num * RIGHT_CHILD(node)->num;
+}
+
+//
+// VAR
+//
 
 void reg__VAR(struct Tree *node) {
     struct RegInfo reg_info = regmap_lookup(ctx.var_to_reg, node->id);
@@ -94,9 +137,9 @@ void reg__VAR(struct Tree *node) {
 %}
 %term CONST=1
 %term VAR=2
-%term ADDITION=3
-%term SUBTRACTION=4
-%term MULTIPLICATION=5
+%term ADD=3
+%term SUB=4
+%term MUL=5
 %term CONS=6
 %term NOT_LESS=7
 %term EQUAL=8
@@ -119,11 +162,16 @@ return: RETURN(numreg)            # 1    # return__RETURN_numreg(bnode);
 return: RETURN(lstreg)            # 1    # return__RETURN_lstreg(bnode);
 numreg: NOT(numreg)               # 1    # numreg__NOT_numreg(bnode);
 numreg: NOT(errreg)               # 1000 # asm_raisesig();
-numreg: ADDITION(numreg, numreg)  # 1    # numreg__ADDITION_numreg_numreg(bnode);
-numreg: ADDITION(const, numreg)   # 1    # numreg__ADDITION_const_numreg(bnode);
-numreg: ADDITION(numreg, const)   # 1    # numreg__ADDITION_numreg_const(bnode);
-const:  ADDITION(const, const)    # 0    # numreg__ADDITION_const_const(bnode);
-numreg: ADDITION(errreg, errreg)  # 1000 # asm_raisesig();
+numreg: ADD(numreg, numreg)  # 1    # numreg__ADD_numreg_numreg(bnode);
+numreg: ADD(const, numreg)   # 1    # numreg__ADD_const_numreg(bnode);
+numreg: ADD(numreg, const)   # 1    # numreg__ADD_numreg_const(bnode);
+const:  ADD(const, const)    # 0    # numreg__ADD_const_const(bnode);
+numreg: ADD(errreg, errreg)  # 1000 # asm_raisesig();
+numreg: MUL(numreg, numreg)  # 1    # numreg__MUL_numreg_numreg(bnode);
+numreg: MUL(const, numreg)   # 1    # numreg__MUL_const_numreg(bnode);
+numreg: MUL(numreg, const)   # 1    # numreg__MUL_numreg_const(bnode);
+const:  MUL(const, const)    # 0    # numreg__MUL_const_const(bnode);
+numreg: MUL(errreg, errreg)  # 1000 # asm_raisesig();
 errreg: reg                       # 1000 #
 errreg: numreg                    # 1000 #
 errreg: lstreg                    # 1000 #
@@ -156,8 +204,9 @@ void invoke_burm(NODEPTR_TYPE root, char *fn_name, struct Symtab *params) {
         exit(32);
     }
     if(burm_label(root)) {
-        printf("\t.global %s\n", fn_name);
         printf("\t.extern raisesig\n", fn_name);
+
+        printf("\t.global %s\n", fn_name);
         printf("\t.type %s, @function\n", fn_name);
         printf("%s:\n", fn_name);
         printf("\t.cfi_startproc\n");

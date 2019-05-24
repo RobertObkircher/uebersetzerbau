@@ -66,8 +66,23 @@ void asm_add(enum Register source, enum Register target) {
 }
 
 void asm_add_immediate(unsigned long long value, enum Register target) {
+    if (value != 0) {
+        const char *to = regstr(target);
+        printf("\tadd $%d, %%%s\n", value, to);
+    }
+}
+
+void asm_mul(enum Register source, enum Register target) {
+    const char *from = regstr(source);
     const char *to = regstr(target);
-    printf("\tadd %d, %%%s\n", value, to);
+    printf("\timul %%%s, %%%s\n", from, to);
+}
+
+void asm_mul_immediate(unsigned long long value, enum Register target) {
+    if (value != 1) {
+        const char *to = regstr(target);
+        printf("\timul $%d, %%%s\n", value, to);
+    }
 }
 
 void asm_immediate(unsigned long long value, enum Register target) {

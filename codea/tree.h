@@ -31,9 +31,9 @@ enum Type {
     TREE_VAR,
 
     // binary:
-    TREE_ADDITION,
-    TREE_SUBTRACTION,
-    TREE_MULTIPLICATION,
+    TREE_ADD,
+    TREE_SUB,
+    TREE_MUL,
     TREE_CONS,
     TREE_NOT_LESS,
     TREE_EQUAL,

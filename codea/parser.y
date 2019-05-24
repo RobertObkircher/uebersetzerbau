@@ -29,8 +29,8 @@ extern void invoke_burm(NODEPTR_TYPE root, char *fn_name, struct Symtab *params)
 @attributes { long value; } NUM
 @attributes { char *name; } ID maybelabeldef 
 @attributes { struct Symtab *sym_up; } maybepars pars
-@attributes { struct Symtab *sym; } cond maybeguards guards guarded guard multterms orterms dotterms gteqeqminus maybeparams params control
-@attributes { struct Tree *tree; struct Symtab *sym; } term maybestats expr nhtis plusterms 
+@attributes { struct Symtab *sym; } cond maybeguards guards guarded guard orterms dotterms gteqeqminus maybeparams params control
+@attributes { struct Tree *tree; struct Symtab *sym; } term maybestats expr nhtis plusterms multterms 
 @attributes { struct Tree *tree; struct Symtab *sym; struct Symtab *sym_up; } stat stats
 @attributes { int node_type; } nhti 
 
@@ -182,7 +182,7 @@ expr
         @}
     | multterms
         @{
-            @i @expr.tree@ = NULL;
+            @i @expr.tree@ = @multterms.tree@; // TODO autosyn
         @}
     | orterms
         @{
@@ -219,17 +219,23 @@ nhti
 plusterms
     : term '+' term
         @{
-            @i @plusterms.tree@ = tree_new(@term.tree@, @term.1.tree@, TREE_ADDITION);
+            @i @plusterms.tree@ = tree_new(@term.tree@, @term.1.tree@, TREE_ADD);
         @}
     | plusterms '+' term
         @{
-            @i @plusterms.tree@ = tree_new(@plusterms.1.tree@, @term.tree@, TREE_ADDITION);
+            @i @plusterms.tree@ = tree_new(@plusterms.1.tree@, @term.tree@, TREE_ADD);
         @}
     ;
 
 multterms
     : term '*' term
+        @{
+            @i @multterms.tree@ = tree_new(@term.tree@, @term.1.tree@, TREE_MUL);
+        @}
     | multterms '*' term
+        @{
+            @i @multterms.tree@ = tree_new(@multterms.1.tree@, @term.tree@, TREE_MUL);
+        @}
     ;
 
 orterms
