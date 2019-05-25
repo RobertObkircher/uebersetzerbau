@@ -14,6 +14,7 @@ const char* regstr(enum Register reg) {
         case RAX: return "rax";
         case R10: return "r10";
         case R11: return "r11";
+        case R15: return "r15";
         default:
             printf("unknown register %d\n", reg);
             exit(41);
@@ -31,6 +32,7 @@ const char* regstr8(enum Register reg) {
         case RAX: return "al";
         case R10: return "r10b";
         case R11: return "r11b";
+        case R15: return "r15b";
         default:
             printf("unknown register %d\n", reg);
             exit(41);
@@ -196,6 +198,47 @@ void asm_return() {
 
 void asm_raisesig() {
     printf("\tjmp raisesig\n");
+}
+
+void asm_cons(enum Register source, enum Register target) {
+    const char *from = regstr(source);
+    const char *to = regstr(target);
+    const char *heap = regstr(R15);
+
+    printf("\tmovq %%%s, (%%%s)\n", from, heap);
+    printf("\tmovq %%%s, 8(%%%s)\n", to, heap);
+    asm_move_reg_reg(R15, target);
+    asm_add_immediate(16, R15);
+}
+
+void asm_cons_reg_imm(unsigned long long value, enum Register target) {
+    const char *to = regstr(target);
+    const char *heap = regstr(R15);
+
+    printf("\tmovq %%%s, (%%%s)\n", to, heap);
+    printf("\tmovq $%d, 8(%%%s)\n", value, heap);
+    asm_move_reg_reg(R15, target);
+    asm_add_immediate(16, R15);
+}
+
+void asm_cons_imm_reg(unsigned long long value, enum Register target) {
+    const char *to = regstr(target);
+    const char *heap = regstr(R15);
+
+    printf("\tmovq $%d, (%%%s)\n", value, heap);
+    printf("\tmovq %%%s, 8(%%%s)\n", to, heap);
+    asm_move_reg_reg(R15, target);
+    asm_add_immediate(16, R15);
+}
+
+void asm_cons_imm_imm(unsigned long long v1, unsigned long long v2, enum Register target) {
+    const char *to = regstr(target);
+    const char *heap = regstr(R15);
+
+    printf("\tmovq $%d, (%%%s)\n", v1, heap);
+    printf("\tmovq $%d, 8(%%%s)\n", v2, heap);
+    asm_move_reg_reg(R15, target);
+    asm_add_immediate(16, R15);
 }
 
 void asm_move_head_reg(enum Register target) {

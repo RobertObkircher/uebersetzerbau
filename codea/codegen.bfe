@@ -29,6 +29,7 @@ enum Register reg() {
 }
 
 void free_reg(enum Register r) {
+// TODO only free if not a variable
     ctx.regs[r] = false;
 }
 
@@ -68,11 +69,15 @@ void numreg__NOT_numreg(struct Tree *node) {
 }
 
 void numreg__HEAD_lstreg(struct Tree *node) {
-    asm_move_head_reg(node->reg);
+    enum Register target = LEFT_CHILD(node)->reg;
+    asm_move_head_reg(target);
+    node->reg = target;
 }
 
 void numreg__TAIL_lstreg(struct Tree *node) {
-    asm_move_head_reg(node->reg);
+    enum Register target = LEFT_CHILD(node)->reg;
+    asm_move_tail_reg(target);
+    node->reg = target;
 }
 
 //
@@ -194,6 +199,43 @@ void numreg__EQ_const_const(struct Tree *node) {
 }
 
 //
+// CONS
+//
+
+void numreg__CONS_tagreg_tagreg(struct Tree *node) {
+    enum Register source = LEFT_CHILD(node)->reg;
+    enum Register target = RIGHT_CHILD(node)->reg;
+
+    asm_cons(source, target);
+
+    node->reg = target;
+    free_reg(source);
+}
+
+void numreg__CONS_const_tagreg(struct Tree *node) {
+    enum Register target = RIGHT_CHILD(node)->reg;
+    unsigned long long value = LEFT_CHILD(node)->num << 1;
+    asm_cons_imm_reg(value, target);
+    node->reg = target;
+}
+
+void numreg__CONS_tagreg_const(struct Tree *node) {
+    enum Register target = LEFT_CHILD(node)->reg;
+    unsigned long long value = RIGHT_CHILD(node)->num << 1;
+    asm_cons_reg_imm(value, target);
+    node->reg = target;
+}
+
+void numreg__CONS_const_const(struct Tree *node) {
+    // TODO constant lists?
+    enum Register target = reg();
+    unsigned long long v1 = LEFT_CHILD(node)->num << 1;
+    unsigned long long v2 = RIGHT_CHILD(node)->num << 1;
+    asm_cons_imm_imm(v1, v2, target);
+    node->reg = target;
+}
+
+//
 // VAR
 //
 
@@ -232,10 +274,10 @@ return: RETURN(numreg)            # 1    # return__RETURN_numreg(bnode);
 return: RETURN(lstreg)            # 1    # return__RETURN_lstreg(bnode);
 numreg: NOT(numreg)               # 1    # numreg__NOT_numreg(bnode);
 numreg: NOT(errreg)               # 1000 # asm_raisesig();
-numreg: HEAD(lstreg)              # 1    # numreg__HEAD_lstreg(bnode);
-numreg: HEAD(errreg)              # 1000 # asm_raisesig();
-numreg: TAIL(lstreg)              # 1    # numreg__TAIL_lstreg(bnode);
-numreg: TAIL(errreg)              # 1000 # asm_raisesig();
+reg:    HEAD(lstreg)                 # 1    # numreg__HEAD_lstreg(bnode);
+reg:    HEAD(errreg)                 # 1000 # asm_raisesig();
+reg:    TAIL(lstreg)                 # 1    # numreg__TAIL_lstreg(bnode);
+reg:    TAIL(errreg)                 # 1000 # asm_raisesig();
 numreg: ISLIST(reg)               # 1    # numreg__ISLIST_reg(bnode);
 const:  ISLIST(const)             # 1    # const__ISLIST_const(bnode);
 numreg: ISLIST(lstreg)            # 1    # numreg__ISLIST_lstreg(bnode);
@@ -270,6 +312,10 @@ numreg: EQ(tagreg, tagreg)        # 1    # numreg__EQ_tagreg_tagreg(bnode);
 numreg: EQ(const, tagreg)         # 1    # numreg__EQ_const_tagreg(bnode);
 numreg: EQ(tagreg, const)         # 1    # numreg__EQ_tagreg_const(bnode);
 const:  EQ(const, const)          # 0    # numreg__EQ_const_const(bnode);
+lstreg: CONS(tagreg, tagreg)      # 1    # numreg__CONS_tagreg_tagreg(bnode);
+lstreg: CONS(const, tagreg)       # 1    # numreg__CONS_const_tagreg(bnode);
+lstreg: CONS(tagreg, const)       # 1    # numreg__CONS_tagreg_const(bnode);
+lstreg: CONS(const, const)        # 0    # numreg__CONS_const_const(bnode);
 tagreg: reg                       # 0    #
 tagreg: numreg                    # 1    # asm_tag_number(bnode->reg);
 tagreg: lstreg                    # 1    # asm_tag_list(bnode->reg);

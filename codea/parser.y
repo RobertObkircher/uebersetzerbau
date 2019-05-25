@@ -176,9 +176,6 @@ expr
     | multterms
     | orterms
     | dotterms
-        @{
-            @i @expr.tree@ = NULL;
-        @}
     | term geeqsub term
         @{
             @i @expr.tree@ = tree_new(@term.tree@, @term.1.tree@, @geeqsub.node_type@);

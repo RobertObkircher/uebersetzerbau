@@ -1,0 +1,5 @@
+extern long f(long);
+
+long tagged_cell = f(4);
+long *cell = (long *) (tagged_cell - 1);
+RET(cell[1] == 329<<1 && cell[0] == 4);

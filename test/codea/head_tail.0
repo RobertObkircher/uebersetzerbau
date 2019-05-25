@@ -1,0 +1,7 @@
+f(x) return head x; end;
+g(x) return tail x; end;
+h(x) return head tail x; end;
+i(x) return tail tail x; end;
+j(x) return head tail tail x; end;
+k(x) return tail tail tail x; end;
+

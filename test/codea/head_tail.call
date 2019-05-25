@@ -1,0 +1,25 @@
+extern long f(long);
+extern long g(long);
+extern long h(long);
+extern long i(long);
+extern long j(long);
+extern long k(long);
+
+long c[] = {92, 98};
+long c_tag = ((long) c) + 1;
+
+long b[] = {28, c_tag};
+long b_tag = ((long) b) + 1;
+
+long a[] = {83, b_tag};
+long a_tag = ((long) a) + 1;
+
+printf("aaaaaaaaaaaaaa %d\n", f(a_tag));
+
+RET( f(a_tag) == 83
+  && g(a_tag) == b_tag
+  && h(a_tag) == 28
+  && i(a_tag) == c_tag
+  && j(a_tag) == 92
+  && k(a_tag) == 98
+);

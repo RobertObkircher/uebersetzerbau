@@ -13,6 +13,7 @@ enum Register {
     R11,
     RAX, /* last, so it is usually available for the last allocation */
     REG_COUNT,
+    R15, // heap pointer
 };
 
 const char* regstr(enum Register reg);
@@ -52,6 +53,11 @@ void asm_le_immediate(unsigned long long value, enum Register target);
 
 void asm_return();
 void asm_raisesig();
+
+void asm_cons(enum Register source, enum Register target);
+void asm_cons_reg_imm(unsigned long long value, enum Register target);
+void asm_cons_imm_reg(unsigned long long value, enum Register target);
+void asm_cons_imm_imm(unsigned long long v1, unsigned long long v2, enum Register target);
 
 void asm_move_head_reg(enum Register target);
 void asm_move_tail_reg(enum Register target);

@@ -1,0 +1,14 @@
+extern long f(long, long, long);
+
+long tagged_cell = f(4, 94, 384);
+long *cell = (long *) (tagged_cell - 1);
+
+long x = cell[0];
+long *cell2 = (long *)(cell[1] - 1);
+long y = cell2[0];
+long *cell3 = (long *)(cell2[1] - 1);
+long three = cell3[0];
+long z = cell3[1];
+
+long heap_layout = ((cell3 + 2) == cell2) && ((cell3 + 4) == cell);
+RET(x == 4 && y == 94 && three == 3<<1 && z == 384 && heap_layout);
