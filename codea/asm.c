@@ -1,4 +1,5 @@
 #include "asm.h"
+#include "panic.h"
 #include "regmap.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,9 +16,7 @@ const char* regstr(enum Register reg) {
         case R10: return "r10";
         case R11: return "r11";
         case R15: return "r15";
-        default:
-            printf("unknown register %d\n", reg);
-            exit(41);
+        default: panic("unknown register %d", reg);
     }
 }
 
@@ -33,9 +32,7 @@ const char* regstr8(enum Register reg) {
         case R10: return "r10b";
         case R11: return "r11b";
         case R15: return "r15b";
-        default:
-            printf("unknown register %d\n", reg);
-            exit(41);
+        default: panic("unknown register %d", reg);
     }
 }
 

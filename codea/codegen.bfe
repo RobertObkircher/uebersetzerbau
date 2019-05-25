@@ -1,12 +1,13 @@
 %{
 #include "asm.h"
 #include <assert.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include "tree.h"
+#include "panic.h"
 #include "regmap.h"
 #include <stdbool.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include "symtab.h"
+#include "tree.h"
 
 struct CodeGenContext {
     char *fn_name;
@@ -24,12 +25,10 @@ enum Register reg() {
             return i;
         }
     }
-    printf("out of registers\n");
-    exit(1);
+    panic("out of registers");
 }
 
 void free_reg(enum Register r) {
-// TODO only free if not a variable
     ctx.regs[r] = false;
 }
 
@@ -117,7 +116,7 @@ void numreg__BIN_numreg_numreg(struct Tree *node, enum Type type) {
             asm_sub(source, target);
             break;
         case TREE_GE:  asm_le(source, target);  break; // TODO check
-        default: printf("invalid type %d\n", type); exit(5);
+        default: panic("invalid type %d", type);
     }
     node->reg = target;
     free_reg(source);
@@ -134,7 +133,7 @@ void numreg__BIN_const_numreg(struct Tree *node, enum Type type) {
             asm_add_immediate(LEFT_CHILD(node)->num, target);
             break;
         case TREE_GE: asm_le_immediate(LEFT_CHILD(node)->num, target);  break;
-        default: printf("invalid type %d\n", type); exit(5);
+        default: panic("invalid type %d", type);
     }
     node->reg = target;
 }
@@ -164,7 +163,7 @@ void numreg__BIN_const_const(struct Tree *node, enum Type type) {
         case TREE_OR:  node->num = ln | rn; break;
         case TREE_SUB: node->num = ln - rn; break;
         case TREE_GE:  node->num = ln >= rn; break;
-        default: printf("invalid type %d\n", type); exit(5);
+        default: panic("invalid type %d", type);
     }
 }
 
@@ -346,8 +345,7 @@ void codegen_begin_function(char *fn_name, struct Symtab *params) {
     };
     symtab_foreach_variable(params, addParam);
     if (ctx.params_count > 6) {
-        printf("too many params\n");
-        exit(32);
+        panic("too many params");
     }
 
     printf("\t.extern raisesig\n", fn_name);
@@ -371,8 +369,7 @@ void codegen_statement(NODEPTR_TYPE root) {
     if(burm_label(root)) {
         burm_reduce(root, 1);
     } else {
-        printf("unable to burm_label\n");
-        exit(3);
+        panic("unable to burm_label");
     }
 }
 

@@ -1,6 +1,6 @@
 CFLAGS = -DEBUG -g
 
-codea: y.tab.c y.tab.h lex.yy.c symtab.o symmap.o regmap.o tree.o allocation.o codegen.o asm.o
+codea: y.tab.c y.tab.h lex.yy.c symtab.o symmap.o regmap.o tree.o allocation.o codegen.o asm.o panic.o
 	$(CC) -o codea y.tab.h y.tab.c lex.yy.c *.o -lfl
 
 oxout.y oxout.l: parser.y scanner.l
@@ -18,6 +18,7 @@ regmap.o: regmap.c regmap.h map.h
 tree.o: tree.c tree.h
 asm.o: asm.c asm.h
 allocation.o: allocation.c allocation.h
+panic.o: panic.c panic.h
 
 codegen.brg: codegen.bfe
 	bfe codegen.bfe > codegen.brg

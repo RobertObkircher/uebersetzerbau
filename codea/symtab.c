@@ -1,4 +1,5 @@
 #include "allocation.h"
+#include "panic.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include "symtab.h"
@@ -36,8 +37,7 @@ struct Symtab *symtab_variable_declaration(struct Symtab *symtab, char *name) {
     struct symmap *map = result->entries;
     enum SymType previous = symmap_insert(map, name, SYM_TYPE_VARIABLE);
     if (previous != SYM_TYPE_UNKNOWN) {
-        printf("variable name '%s' already used\n", name);
-        exit(3);
+        panic3("variable name '%s' already used", name);
     }
     return result;
 }
@@ -46,12 +46,10 @@ struct Symtab *symtab_variable_usage(struct Symtab *symtab, char *name) {
     struct symmap *map = symtab->entries;
     enum SymType type = symmap_lookup(map, name);
     if (type == SYM_TYPE_UNKNOWN) {
-        printf("unknown variable '%s'\n", name);
-        exit(3);
+        panic3("unknown variable '%s'", name);
     }
     if (type != SYM_TYPE_VARIABLE) {
-        printf("'%s' is not a variable\n", name);
-        exit(3);
+        panic3("'%s' is not a variable", name);
     }
     return symtab;
 }
@@ -62,8 +60,7 @@ struct Symtab *symtab_label_declaration(struct Symtab *symtab, char *name) {
         struct symmap *map = result->entries;
         enum SymType previous = symmap_insert(map, name, SYM_TYPE_LABEL);
         if (previous != SYM_TYPE_UNKNOWN) {
-            printf("label name '%s' already used\n", name);
-            exit(3);
+            panic3("label name '%s' already used", name);
         }
     }
     return result;
@@ -73,12 +70,10 @@ struct Symtab *symtab_label_usage(struct Symtab *symtab, char *name) {
     struct symmap *map = symtab->entries;
     enum SymType type = symmap_lookup(map, name);
     if (type == SYM_TYPE_UNKNOWN) {
-        printf("unknown label '%s'\n", name);
-        exit(3);
+        panic3("unknown label '%s'", name);
     }
     if (type != SYM_TYPE_LABEL) {
-        printf("'%s' is not a label\n", name);
-        exit(3);
+        panic3("'%s' is not a label", name);
     }
     return symtab;
 }
