@@ -164,6 +164,36 @@ void numreg__BIN_const_const(struct Tree *node, enum Type type) {
 }
 
 //
+// EQ
+//
+
+void numreg__EQ_tagreg_tagreg(struct Tree *node) {
+    enum Register source = LEFT_CHILD(node)->reg;
+    enum Register target = RIGHT_CHILD(node)->reg;
+
+    asm_eq(source, target);
+
+    node->reg = target;
+    free_reg(source);
+}
+
+void numreg__EQ_const_tagreg(struct Tree *node) {
+    enum Register target = RIGHT_CHILD(node)->reg;
+    unsigned long long value = LEFT_CHILD(node)->num << 1;
+    asm_eq_immediate(value, target);
+    node->reg = target;
+}
+
+void numreg__EQ_tagreg_const(struct Tree *node) {
+    flip(node);
+    numreg__EQ_const_tagreg(node);
+}
+
+void numreg__EQ_const_const(struct Tree *node) {
+    node->num = LEFT_CHILD(node)->num == RIGHT_CHILD(node)->num;
+}
+
+//
 // VAR
 //
 
@@ -236,6 +266,13 @@ numreg: GE(const, numreg)         # 1    # numreg__BIN_const_numreg(bnode, TREE_
 numreg: GE(numreg, const)         # 1    # numreg__BIN_numreg_const(bnode, TREE_GE);
 const:  GE(const, const)          # 0    # numreg__BIN_const_const(bnode, TREE_GE);
 numreg: GE(errreg, errreg)        # 1000 # asm_raisesig();
+numreg: EQ(tagreg, tagreg)        # 1    # numreg__EQ_tagreg_tagreg(bnode);
+numreg: EQ(const, tagreg)         # 1    # numreg__EQ_const_tagreg(bnode);
+numreg: EQ(tagreg, const)         # 1    # numreg__EQ_tagreg_const(bnode);
+const:  EQ(const, const)          # 0    # numreg__EQ_const_const(bnode);
+tagreg: reg                       # 0    #
+tagreg: numreg                    # 1    # asm_tag_number(bnode->reg);
+tagreg: lstreg                    # 1    # asm_tag_list(bnode->reg);
 errreg: reg                       # 1000 #
 errreg: numreg                    # 1000 #
 errreg: lstreg                    # 1000 #

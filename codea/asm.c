@@ -72,13 +72,17 @@ void asm_move_reg_reg(enum Register source, enum Register target) {
 }
 
 void asm_xor_immediate(unsigned long long value, enum Register target) {
-    const char *to = regstr(target);
-    printf("\txor $%d, %%%s\n", value, to);
+    if (value) {
+        const char *to = regstr(target);
+        printf("\txor $%d, %%%s\n", value, to);
+    }
 }
 
 void asm_and_immediate(unsigned long long value, enum Register target) {
-    const char *to = regstr(target);
-    printf("\tand $%d, %%%s\n", value, to);
+    if (value != -1) {
+        const char *to = regstr(target);
+        printf("\tand $%d, %%%s\n", value, to);
+    }
 }
 
 void asm_add(enum Register source, enum Register target) {
@@ -88,7 +92,7 @@ void asm_add(enum Register source, enum Register target) {
 }
 
 void asm_add_immediate(unsigned long long value, enum Register target) {
-    if (value != 0) {
+    if (value) {
         const char *to = regstr(target);
         printf("\tadd $%d, %%%s\n", value, to);
     }
@@ -114,7 +118,7 @@ void asm_or(enum Register source, enum Register target) {
 }
 
 void asm_or_immediate(unsigned long long value, enum Register target) {
-    if (value != 1) {
+    if (value) {
         const char *to = regstr(target);
         printf("\tor $%d, %%%s\n", value, to);
     }
@@ -127,7 +131,7 @@ void asm_sub(enum Register source, enum Register target) {
 }
 
 void asm_sub_immediate(unsigned long long value, enum Register target) {
-    if (value != 1) {
+    if (value) {
         const char *to = regstr(target);
         printf("\tsub $%d, %%%s\n", value, to);
     }
@@ -138,6 +142,23 @@ void asm_neg(enum Register target) {
     printf("\tneg %%%s\n", to);
 }
 
+void asm_eq(enum Register source, enum Register target) {
+    if (source != target) {
+        const char *from = regstr(source);
+        const char *to = regstr(target);
+        printf("\tcmp %%%s, %%%s\n", from, to);
+        printf("\tsete %%%s\n", regstr8(target));
+    } else {
+        asm_immediate(1, target);
+    }
+}
+
+void asm_eq_immediate(unsigned long long value, enum Register target) {
+    const char *to = regstr(target);
+    printf("\tcmp $%d, %%%s\n", value, to);
+    printf("\tsete %%%s\n", regstr8(target));
+}
+
 void asm_ge(enum Register source, enum Register target) {
     const char *from = regstr(source);
     const char *to = regstr(target);
@@ -146,11 +167,9 @@ void asm_ge(enum Register source, enum Register target) {
 }
 
 void asm_ge_immediate(unsigned long long value, enum Register target) {
-    if (value != 1) {
-        const char *to = regstr(target);
-        printf("\tcmp $%d, %%%s\n", value, to);
-        printf("\tsetge %%%s\n", regstr8(target));
-    }
+    const char *to = regstr(target);
+    printf("\tcmp $%d, %%%s\n", value, to);
+    printf("\tsetge %%%s\n", regstr8(target));
 }
 
 void asm_le(enum Register source, enum Register target) {
@@ -161,11 +180,9 @@ void asm_le(enum Register source, enum Register target) {
 }
 
 void asm_le_immediate(unsigned long long value, enum Register target) {
-    if (value != 1) {
-        const char *to = regstr(target);
-        printf("\tcmp $%d, %%%s\n", value, to);
-        printf("\tsetle %%%s\n", regstr8(target));
-    }
+    const char *to = regstr(target);
+    printf("\tcmp $%d, %%%s\n", value, to);
+    printf("\tsetle %%%s\n", regstr8(target));
 }
 
 void asm_immediate(unsigned long long value, enum Register target) {

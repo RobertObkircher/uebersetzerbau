@@ -41,6 +41,9 @@ void asm_sub(enum Register source, enum Register target);
 void asm_sub_immediate(unsigned long long value, enum Register target);
 void asm_neg(enum Register target);
 
+void asm_eq(enum Register source, enum Register target);
+void asm_eq_immediate(unsigned long long value, enum Register target);
+
 void asm_ge(enum Register source, enum Register target);
 void asm_ge_immediate(unsigned long long value, enum Register target);
 
