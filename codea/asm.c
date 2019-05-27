@@ -147,6 +147,7 @@ void asm_eq(enum Register source, enum Register target) {
         const char *to = regstr(target);
         printf("\tcmp %%%s, %%%s\n", from, to);
         printf("\tsete %%%s\n", regstr8(target));
+        asm_and_immediate(1, target);
     } else {
         asm_immediate(1, target);
     }
@@ -156,6 +157,7 @@ void asm_eq_immediate(unsigned long long value, enum Register target) {
     const char *to = regstr(target);
     printf("\tcmp $%d, %%%s\n", value, to);
     printf("\tsete %%%s\n", regstr8(target));
+    asm_and_immediate(1, target);
 }
 
 void asm_ge(enum Register source, enum Register target) {
@@ -163,12 +165,14 @@ void asm_ge(enum Register source, enum Register target) {
     const char *to = regstr(target);
     printf("\tcmp %%%s, %%%s\n", from, to);
     printf("\tsetge %%%s\n", regstr8(target));
+    asm_and_immediate(1, target);
 }
 
 void asm_ge_immediate(unsigned long long value, enum Register target) {
     const char *to = regstr(target);
     printf("\tcmp $%d, %%%s\n", value, to);
     printf("\tsetge %%%s\n", regstr8(target));
+    asm_and_immediate(1, target);
 }
 
 void asm_le(enum Register source, enum Register target) {
@@ -176,12 +180,14 @@ void asm_le(enum Register source, enum Register target) {
     const char *to = regstr(target);
     printf("\tcmp %%%s, %%%s\n", from, to);
     printf("\tsetle %%%s\n", regstr8(target));
+    asm_and_immediate(1, target);
 }
 
 void asm_le_immediate(unsigned long long value, enum Register target) {
     const char *to = regstr(target);
     printf("\tcmp $%d, %%%s\n", value, to);
     printf("\tsetle %%%s\n", regstr8(target));
+    asm_and_immediate(1, target);
 }
 
 void asm_immediate(unsigned long long value, enum Register target) {

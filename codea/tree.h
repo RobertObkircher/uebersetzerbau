@@ -2,16 +2,17 @@
 #define __TREE_H__
 
 #include "regmap.h"
+#include <stdbool.h>
 
 struct Tree {
-	int node_type;
-	struct Tree *kids[2];
-
-      	enum Register reg;
-       	long num;
-        char *id;
-
-        struct burm_state* state;       /* state variable for BURG */
+    int node_type;
+    struct Tree *kids[2];
+    
+    enum Register reg;
+    long num;
+    char *id;
+    
+    struct burm_state* state;       /* state variable for BURG */
 };
 
 #define NODEPTR_TYPE struct Tree*

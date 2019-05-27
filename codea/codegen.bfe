@@ -102,7 +102,6 @@ void numreg__ISLIST_numreg(struct Tree *node) {
 //
 // ADD, MUL, OR
 //
-
 void numreg__BIN_numreg_numreg(struct Tree *node, enum Type type) {
     enum Register source = LEFT_CHILD(node)->reg;
     enum Register target = RIGHT_CHILD(node)->reg;
