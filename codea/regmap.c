@@ -4,7 +4,7 @@
 #define MAP regmap
 #define KEY char*
 #define VALUE struct RegInfo
-#define NIL (struct RegInfo) {} // TODO
+#define NIL (struct RegInfo) { .reg = REGISTER_NONE }
 #define MAP_IMPLEMENTATION
 #include "map.h"
 

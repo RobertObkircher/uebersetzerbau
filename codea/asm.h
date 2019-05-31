@@ -14,6 +14,7 @@ enum Register {
     RAX, /* last, so it is usually available for the last allocation */
     REG_COUNT,
     R15, // heap pointer
+    REGISTER_NONE,
 };
 
 const char* regstr(enum Register reg);

@@ -50,11 +50,16 @@ enum Type {
     TREE_EXPR, // binary or unary
 
     TREE_NIL,
+    
+    TREE_DECL,
+    TREE_ASSIGN,
 };
 
 struct Tree *tree_new_num(long num);
 struct Tree *tree_new_id(char *id);
 struct Tree *tree_new(struct Tree *left, struct Tree *right, enum Type type);
 struct Tree *tree_nil();
+struct Tree *tree_new_variable_assignment(char *name, struct Tree *expr);
+struct Tree *tree_new_variable_declaration(char *name, struct Tree *expr);
 
 #endif

@@ -112,13 +112,13 @@ stat
     | VAR ID '=' expr 
         @{ 
             @i @stat.sym_up@ = symtab_variable_declaration(@stat.sym@, @ID.name@); 
-            @i @stat.tree@ = NULL; // TODO
+            @i @stat.tree@ = tree_new_variable_declaration(@ID.name@, @expr.tree@);
         @}
     | ID '=' expr
         @{
             // TODO use symusage traversal instead?
             @i @stat.sym_up@ = symtab_variable_usage(@stat.sym@, @ID.name@);
-            @i @stat.tree@ = NULL; // TODO
+            @i @stat.tree@ = tree_new_variable_assignment(@ID.name@, @expr.tree@);
         @}
     ;
 

@@ -46,6 +46,7 @@ void return__RETURN(struct Tree *node) {
     node->reg = LEFT_CHILD(node)->reg;
     asm_move_reg_reg(node->reg, RAX);
     asm_return();
+    free_reg(node->reg);
 }
 
 void return__RETURN_numreg(struct Tree *node) {
@@ -67,6 +68,10 @@ void numreg__NOT_numreg(struct Tree *node) {
     asm_xor_immediate(1, node->reg);
 }
 
+void const__NOT_const(struct Tree *node) {
+    node->num = LEFT_CHILD(node)->num ^ 1;
+}
+
 void numreg__HEAD_lstreg(struct Tree *node) {
     enum Register target = LEFT_CHILD(node)->reg;
     asm_move_head_reg(target);
@@ -84,6 +89,7 @@ void numreg__TAIL_lstreg(struct Tree *node) {
 //
 
 void numreg__ISLIST_reg(struct Tree *node) {
+    node->reg = LEFT_CHILD(node)->reg;
     asm_and_immediate(1, node->reg);
 }
 
@@ -243,6 +249,32 @@ void reg__VAR(struct Tree *node) {
     asm_move_reg_reg(reg_info.reg, node->reg);
 }
 
+//
+// raisesig
+//
+
+void raisesig_and_set_reg(struct Tree *node) {
+    // TODO only emit raisesig and no other instructions
+    struct Tree *left = LEFT_CHILD(node);
+    enum Register left_reg = left ? left->reg : REGISTER_NONE;
+
+    struct Tree *right = RIGHT_CHILD(node);
+    enum Register right_reg = right ? right->reg : REGISTER_NONE;
+
+    enum Register r = left_reg;
+    if (r == REGISTER_NONE) {
+        r = right_reg;
+    } else if (right_reg != REGISTER_NONE) {
+        free_reg(right_reg);
+    }
+    if (r == REGISTER_NONE)
+        r = reg();
+
+    node->reg = r;
+    asm_raisesig();
+}
+
+
 /* symbols below must also be defined
    definition in tree.h!!!
 */
@@ -263,6 +295,9 @@ void reg__VAR(struct Tree *node) {
 %term RETURN=14
 %term EXPR=15
 %term NIL=16
+%term DECL=17
+%term ASSIGN=18
+
 
 %start stat
 %%
@@ -271,41 +306,41 @@ return: RETURN(reg)               # 1    # return__RETURN(bnode);
 return: RETURN(numreg)            # 1    # return__RETURN_numreg(bnode);
 return: RETURN(lstreg)            # 1    # return__RETURN_lstreg(bnode);
 numreg: NOT(numreg)               # 1    # numreg__NOT_numreg(bnode);
-numreg: NOT(errreg)               # 1000 # asm_raisesig();
-reg:    HEAD(lstreg)                 # 1    # numreg__HEAD_lstreg(bnode);
-reg:    HEAD(errreg)                 # 1000 # asm_raisesig();
-reg:    TAIL(lstreg)                 # 1    # numreg__TAIL_lstreg(bnode);
-reg:    TAIL(errreg)                 # 1000 # asm_raisesig();
+const:  NOT(const)                # 0    # const__NOT_const(bnode);
+numreg: NOT(errreg)               # 1000 # raisesig_and_set_reg(bnode);
+reg:    HEAD(lstreg)              # 1    # numreg__HEAD_lstreg(bnode);
+reg:    HEAD(errreg)              # 1000 # raisesig_and_set_reg(bnode);
+reg:    TAIL(lstreg)              # 1    # numreg__TAIL_lstreg(bnode);
+reg:    TAIL(errreg)              # 1000 # raisesig_and_set_reg(bnode);
 numreg: ISLIST(reg)               # 1    # numreg__ISLIST_reg(bnode);
-const:  ISLIST(const)             # 1    # const__ISLIST_const(bnode);
+const:  ISLIST(const)             # 0    # const__ISLIST_const(bnode);
 numreg: ISLIST(lstreg)            # 1    # numreg__ISLIST_lstreg(bnode);
 numreg: ISLIST(numreg)            # 1    # numreg__ISLIST_numreg(bnode);
-numreg: ISLIST(erreg)             # 1000 # asm_raisesig();
 numreg: ADD(numreg, numreg)       # 1    # numreg__BIN_numreg_numreg(bnode, TREE_ADD);
 numreg: ADD(const, numreg)        # 1    # numreg__BIN_const_numreg(bnode, TREE_ADD);
 numreg: ADD(numreg, const)        # 1    # numreg__BIN_numreg_const(bnode, TREE_ADD);
 const:  ADD(const, const)         # 0    # numreg__BIN_const_const(bnode, TREE_ADD);
-numreg: ADD(errreg, errreg)       # 1000 # asm_raisesig();
+numreg: ADD(errreg, errreg)       # 1000 # raisesig_and_set_reg(bnode);
 numreg: MUL(numreg, numreg)       # 1    # numreg__BIN_numreg_numreg(bnode, TREE_MUL);
 numreg: MUL(const, numreg)        # 1    # numreg__BIN_const_numreg(bnode, TREE_MUL);
 numreg: MUL(numreg, const)        # 1    # numreg__BIN_numreg_const(bnode, TREE_MUL);
 const:  MUL(const, const)         # 0    # numreg__BIN_const_const(bnode, TREE_MUL);
-numreg: MUL(errreg, errreg)       # 1000 # asm_raisesig();
+numreg: MUL(errreg, errreg)       # 1000 # raisesig_and_set_reg(bnode);
 numreg: OR(numreg, numreg)        # 1    # numreg__BIN_numreg_numreg(bnode, TREE_OR);
 numreg: OR(const, numreg)         # 1    # numreg__BIN_const_numreg(bnode, TREE_OR);
 numreg: OR(numreg, const)         # 1    # numreg__BIN_numreg_const(bnode, TREE_OR);
 const:  OR(const, const)          # 0    # numreg__BIN_const_const(bnode, TREE_OR);
-numreg: OR(errreg, errreg)        # 1000 # asm_raisesig();
+numreg: OR(errreg, errreg)        # 1000 # raisesig_and_set_reg(bnode);
 numreg: SUB(numreg, numreg)       # 1    # numreg__BIN_numreg_numreg(bnode, TREE_SUB);
 numreg: SUB(const, numreg)        # 1    # numreg__BIN_const_numreg(bnode, TREE_SUB);
 numreg: SUB(numreg, const)        # 1    # numreg__BIN_numreg_const(bnode, TREE_SUB);
 const:  SUB(const, const)         # 0    # numreg__BIN_const_const(bnode, TREE_SUB);
-numreg: SUB(errreg, errreg)       # 1000 # asm_raisesig();
+numreg: SUB(errreg, errreg)       # 1000 # raisesig_and_set_reg(bnode);
 numreg: GE(numreg, numreg)        # 1    # numreg__BIN_numreg_numreg(bnode, TREE_GE);
 numreg: GE(const, numreg)         # 1    # numreg__BIN_const_numreg(bnode, TREE_GE);
 numreg: GE(numreg, const)         # 1    # numreg__BIN_numreg_const(bnode, TREE_GE);
 const:  GE(const, const)          # 0    # numreg__BIN_const_const(bnode, TREE_GE);
-numreg: GE(errreg, errreg)        # 1000 # asm_raisesig();
+numreg: GE(errreg, errreg)        # 1000 # raisesig_and_set_reg(bnode);
 numreg: EQ(tagreg, tagreg)        # 1    # numreg__EQ_tagreg_tagreg(bnode);
 numreg: EQ(const, tagreg)         # 1    # numreg__EQ_const_tagreg(bnode);
 numreg: EQ(tagreg, const)         # 1    # numreg__EQ_tagreg_const(bnode);
