@@ -27,4 +27,4 @@ codegen.c: codegen.brg
 codegen.o: codegen.c
 
 clean:
-	$(RM) *.o ag y.tab.h y.tab.c lex.yy.c oxout.l oxout.y *.brg codegen.c
+	$(RM) *.o codea y.tab.h y.tab.c lex.yy.c oxout.l oxout.y *.brg codegen.c

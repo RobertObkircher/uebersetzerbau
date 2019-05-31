@@ -274,6 +274,49 @@ void raisesig_and_set_reg(struct Tree *node) {
     asm_raisesig();
 }
 
+//
+// Variables
+//
+void variable_declaration(struct Tree *node) {
+    enum Register r = LEFT_CHILD(node)->reg;
+    regmap_insert(ctx.var_to_reg, node->id, (struct RegInfo) { .reg = r });
+}
+
+void variable_declaration_from_var(struct Tree *node) {
+    struct Tree *left = LEFT_CHILD(node);
+    enum Register source = regmap_lookup(ctx.var_to_reg, left->id).reg;
+    enum Register target = reg();
+    asm_move_reg_reg(source, target);
+    regmap_insert(ctx.var_to_reg, node->id, (struct RegInfo) { .reg = target });
+}
+
+void variable_declaration_from_const(struct Tree *node) {
+    long value = LEFT_CHILD(node)->num;
+    enum Register target = reg();
+    regmap_insert(ctx.var_to_reg, node->id, (struct RegInfo) { .reg = target });
+    asm_immediate(value << 1, target);
+}
+
+void variable_assignment(struct Tree *node) {
+    enum Register source = LEFT_CHILD(node)->reg;
+    enum Register target = regmap_lookup(ctx.var_to_reg, node->id).reg;
+    asm_move_reg_reg(source, target);
+    free_reg(source);
+}
+
+void variable_assignment_from_var(struct Tree *node) {
+    struct Tree *left = LEFT_CHILD(node);
+    enum Register source = regmap_lookup(ctx.var_to_reg, left->id).reg;
+    enum Register target = regmap_lookup(ctx.var_to_reg, node->id).reg;
+    asm_move_reg_reg(source, target);
+}
+
+void variable_assignment_from_const(struct Tree *node) {
+    long value = LEFT_CHILD(node)->num;
+    enum Register target = regmap_lookup(ctx.var_to_reg, node->id).reg;
+    asm_immediate(value << 1, target);
+}
+
 
 /* symbols below must also be defined
    definition in tree.h!!!
@@ -301,6 +344,12 @@ void raisesig_and_set_reg(struct Tree *node) {
 
 %start stat
 %%
+stat: DECL(reg)                   # 0    # variable_declaration(bnode);
+stat: DECL(VAR)                   # 0    # variable_declaration_from_var(bnode);
+stat: DECL(const)                 # 0    # variable_declaration_from_const(bnode);
+stat: ASSIGN(reg)                 # 0    # variable_assignment(bnode);
+stat: ASSIGN(VAR)                 # 0    # variable_assignment_from_var(bnode);
+stat: ASSIGN(const)               # 0    # variable_assignment_from_const(bnode);
 stat: return                      # 0    #
 return: RETURN(reg)               # 1    # return__RETURN(bnode);
 return: RETURN(numreg)            # 1    # return__RETURN_numreg(bnode);

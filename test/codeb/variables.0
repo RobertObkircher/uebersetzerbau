@@ -1,0 +1,7 @@
+f(x)
+    var y = 4;
+    var z = x;
+    y = z;
+    z = 8;
+    return y;
+end;
