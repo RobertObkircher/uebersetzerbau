@@ -1,0 +1,7 @@
+f()
+    var a = 54;
+    abc: cond
+        -> break abc;
+        -> 
+    end;
+end;

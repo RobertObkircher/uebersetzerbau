@@ -4,11 +4,12 @@
 %start program
 
 %{
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "symtab.h"
 #include "tree.h"
+#include "names.h"
 
 extern int yylex();
 
@@ -19,27 +20,32 @@ int yyerror(char *e) {
     exit(2);
 }
 
-void codegen_begin_function(char *fn_name, struct Symtab *params);
-void codegen_end_function();
+void codegen_begin_function(char *fn_name);
+void codegen_add_param(char *name);
+void codegen_end_function(bool empty);
 void codegen_empty_function();
 void codegen_statement(NODEPTR_TYPE root);
+void codegen_free_variables(int var_count);
 
+static int next_unique_id = 1;
 %}
 
-@autosyn name sym_up tree
-@autoinh sym
+@autosyn name tree
+@autoinh cond_uid
 
 @attributes { long value; } NUM
-@attributes { char *name; } ID maybelabeldef 
-@attributes { struct Symtab *sym_up; } maybepars pars
-@attributes { struct Symtab *sym; } cond maybeguards guards guarded guard maybeparams params control maybestats 
-@attributes { struct Tree *tree; struct Symtab *sym; } term expr nhtis plusterms multterms orterms dotterms 
-@attributes { struct Symtab *sym; struct Symtab *sym_up; } stats
-@attributes { struct Tree *tree; struct Symtab *sym; struct Symtab *sym_up; } stat
+@attributes { char *name; } ID
+@attributes {  } maybepars pars
+@attributes {  } maybeparams params
+@attributes { int empty; } maybestats 
+@attributes {  int cond_uid; } cond maybeguards guards guarded control 
+@attributes {  int cond_uid; int guard_uid; } guard
+@attributes { struct Tree *tree;  } term expr nhtis plusterms multterms orterms dotterms 
+@attributes {  int var_count; } stats
+@attributes { struct Tree *tree; int var_count; } stat
 @attributes { int node_type; } nhti geeqsub 
 
-@traversal symusage
-@traversal @postorder codegen
+@traversal @lefttoright @postorder codegen
 
 %%
 
@@ -51,90 +57,92 @@ program
 funcdef
     : ID '(' maybepars ')' maybestats END
         @{
-            @i @maybestats.sym@ = symtab_new_clone(@maybepars.sym_up@);
-            @codegen @revorder(1) codegen_begin_function(@ID.name@, @maybepars.sym_up@);
-            @codegen codegen_end_function();
+            @codegen @revorder(1) codegen_begin_function(@ID.name@);
+            @codegen codegen_end_function(@maybestats.empty@);
         @}
     ;
 
 maybepars
     : /* empty */
-        @{
-            @i @maybepars.sym_up@ = symtab_new();
-        @}
     | pars
     ;
 
 pars
     : ID
         @{
-            @i @pars.sym_up@ = symtab_new_with_variable(@ID.name@);
+            @codegen codegen_add_param(@ID.name@);
         @}
     | pars ',' ID
         @{
-            @i @pars.sym_up@ = symtab_variable_declaration(@pars.1.sym_up@, @ID.name@);
+            @codegen codegen_add_param(@ID.name@);
         @}
     ;
 
 maybestats
     : /* empty */
         @{
-            @codegen codegen_empty_function();
+            @i @maybestats.empty@ = true;
         @}
     | stats
+        @{
+            @i @maybestats.empty@ = false;
+            @codegen codegen_free_variables(@stats.var_count@);
+        @}
     ;
 
 stats
     : stat ';'
         @{
-            @i @stats.sym_up@ = @stat.sym_up@;
-            @codegen codegen_statement(@stat.tree@);
+            @i @stats.var_count@ = @stat.var_count@;
         @}
     | stats stat ';'
         @{
-            @i @stat.sym@ = @stats.1.sym_up@;
-            @i @stats.sym_up@ = @stat.sym_up@;
-            @codegen codegen_statement(@stat.tree@);
+            @i @stats.var_count@ = @stats.1.var_count@ + @stat.var_count@;
         @}
     ;
 
 stat
     : RETURN expr
         @{
-            @i @stat.sym_up@ = @stat.sym@;
             @i @stat.tree@ = tree_new(@expr.tree@, NULL, TREE_RETURN);
+            @i @stat.var_count@ = 0;
+            @codegen codegen_statement(@stat.tree@);
         @}
     | cond
         @{
-            @i @stat.sym_up@ = @stat.sym@;
-            @i @stat.tree@ = NULL; // TODO
+            @i @cond.cond_uid@ = next_unique_id++;
+            @i @stat.tree@ = NULL;
+            @i @stat.var_count@ = 0;
+            @codegen @revorder(1) printf("C%d:\n", @cond.cond_uid@);
+            @codegen printf("E%d:\n", @cond.cond_uid@);
         @}
     | VAR ID '=' expr 
         @{ 
-            @i @stat.sym_up@ = symtab_variable_declaration(@stat.sym@, @ID.name@); 
             @i @stat.tree@ = tree_new_variable_declaration(@ID.name@, @expr.tree@);
+            @i @stat.var_count@ = 1;
+            @codegen {
+                codegen_statement(@stat.tree@);
+                lookup_variable_reg(@ID.name@); // Just to be sure
+            }
         @}
     | ID '=' expr
         @{
-            // TODO use symusage traversal instead?
-            @i @stat.sym_up@ = symtab_variable_usage(@stat.sym@, @ID.name@);
             @i @stat.tree@ = tree_new_variable_assignment(@ID.name@, @expr.tree@);
+            @i @stat.var_count@ = 0;
+            @codegen {
+                lookup_variable_reg(@ID.name@); // codegen_statement should call this anyway
+                codegen_statement(@stat.tree@);
+            }
         @}
     ;
 
 cond
-    : maybelabeldef COND maybeguards END
+    : COND maybeguards END
+    | ID ':' COND maybeguards END
         @{
-            @i @maybeguards.sym@ = symtab_label_declaration(@cond.sym@, @maybelabeldef.name@);
+            @codegen @revorder(1) push_label(@ID.name@, @cond.cond_uid@);
+            @codegen pop_label();
         @}
-    ;
-
-maybelabeldef
-    : /* empty */
-        @{
-            @i @maybelabeldef.name@ = NULL;
-        @}
-    | ID ':'
     ;
 
 maybeguards
@@ -149,23 +157,42 @@ guards
 
 guarded
     : guard maybestats control
+        @{
+            @i @guard.guard_uid@ = next_unique_id++;
+            @codegen printf("G%d:\n", @guard.guard_uid@);
+        @}
     ;
 
 guard
     : expr GUARD
+        @{
+            @codegen @revorder(1) codegen_statement(tree_new_guard(@expr.tree@, @guard.guard_uid@));
+        @}
     | GUARD
     ;
 
 control
     : CONTINUE
+        @{
+            @codegen printf("\tjmp .C%d\n", @control.cond_uid@);
+        @}
     | CONTINUE ID
         @{
-            @symusage symtab_label_usage(@control.sym@, @ID.name@);
+            @codegen {
+                int uid = lookup_label_cond_uid(@ID.name@);
+                printf("\tjmp .C%d\n", uid);
+            }
         @}
     | BREAK
+        @{
+            @codegen printf("\tjmp .E%d\n", @control.cond_uid@);
+        @}
     | BREAK ID
         @{
-            @symusage symtab_label_usage(@control.sym@, @ID.name@);
+            @codegen {
+                int uid = lookup_label_cond_uid(@ID.name@);
+                printf("\tjmp .E%d\n", uid);
+            }
         @}
     ;
 
@@ -261,7 +288,7 @@ term
         @}
     | ID
         @{
-            @symusage symtab_variable_usage(@term.sym@, @ID.name@);
+            @codegen lookup_variable_reg(@ID.name@); // codegen_statement should call this anyway
             @i @term.tree@ = tree_new_id(@ID.name@);
         @}
     | ID '(' maybeparams ')'

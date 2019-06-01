@@ -1,22 +1,22 @@
 %{
 #include "asm.h"
 #include <assert.h>
+#include "names.h"
 #include "panic.h"
 #include "regmap.h"
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "symtab.h"
 #include "tree.h"
 
 struct CodeGenContext {
     char *fn_name;
     bool regs[REG_COUNT];
-    struct regmap *var_to_reg;
     int params_count;
 };
 
 static struct CodeGenContext ctx;
+static int next_guard_label = 1;
 
 enum Register reg() {
     for (int i = 0; i < REG_COUNT; ++i) {
@@ -244,9 +244,9 @@ void numreg__CONS_const_const(struct Tree *node) {
 //
 
 void reg__VAR(struct Tree *node) {
-    struct RegInfo reg_info = regmap_lookup(ctx.var_to_reg, node->id);
+    enum Register r = lookup_variable_reg(node->id);
     node->reg = reg();
-    asm_move_reg_reg(reg_info.reg, node->reg);
+    asm_move_reg_reg(r, node->reg);
 }
 
 //
@@ -279,42 +279,53 @@ void raisesig_and_set_reg(struct Tree *node) {
 //
 void variable_declaration(struct Tree *node) {
     enum Register r = LEFT_CHILD(node)->reg;
-    regmap_insert(ctx.var_to_reg, node->id, (struct RegInfo) { .reg = r });
+    push_variable(node->id, r);
 }
 
 void variable_declaration_from_var(struct Tree *node) {
     struct Tree *left = LEFT_CHILD(node);
-    enum Register source = regmap_lookup(ctx.var_to_reg, left->id).reg;
+    enum Register source = lookup_variable_reg(left->id);
     enum Register target = reg();
     asm_move_reg_reg(source, target);
-    regmap_insert(ctx.var_to_reg, node->id, (struct RegInfo) { .reg = target });
+
+    push_variable(node->id, target);
 }
 
 void variable_declaration_from_const(struct Tree *node) {
     long value = LEFT_CHILD(node)->num;
     enum Register target = reg();
-    regmap_insert(ctx.var_to_reg, node->id, (struct RegInfo) { .reg = target });
     asm_immediate(value << 1, target);
+
+    push_variable(node->id, target);
 }
 
 void variable_assignment(struct Tree *node) {
     enum Register source = LEFT_CHILD(node)->reg;
-    enum Register target = regmap_lookup(ctx.var_to_reg, node->id).reg;
+    enum Register target = lookup_variable_reg(node->id);
     asm_move_reg_reg(source, target);
     free_reg(source);
 }
 
 void variable_assignment_from_var(struct Tree *node) {
     struct Tree *left = LEFT_CHILD(node);
-    enum Register source = regmap_lookup(ctx.var_to_reg, left->id).reg;
-    enum Register target = regmap_lookup(ctx.var_to_reg, node->id).reg;
+    enum Register source = lookup_variable_reg(left->id);
+    enum Register target = lookup_variable_reg(node->id);
     asm_move_reg_reg(source, target);
 }
 
 void variable_assignment_from_const(struct Tree *node) {
     long value = LEFT_CHILD(node)->num;
-    enum Register target = regmap_lookup(ctx.var_to_reg, node->id).reg;
+    enum Register target = lookup_variable_reg(node->id);
     asm_immediate(value << 1, target);
+}
+
+//
+// GUARD
+//
+void guard_numreg(struct Tree *node) {
+    enum Register reg = LEFT_CHILD(node)->reg;
+    asm_jmp_guard(reg, node->guard_uid);
+    free_reg(reg);
 }
 
 
@@ -340,10 +351,12 @@ void variable_assignment_from_const(struct Tree *node) {
 %term NIL=16
 %term DECL=17
 %term ASSIGN=18
+%term GUARD=19
 
 
 %start stat
 %%
+stat: GUARD(numreg)               # 1    # guard_numreg(bnode);
 stat: DECL(reg)                   # 0    # variable_declaration(bnode);
 stat: DECL(VAR)                   # 0    # variable_declaration_from_var(bnode);
 stat: DECL(const)                 # 0    # variable_declaration_from_const(bnode);
@@ -414,23 +427,11 @@ reg: VAR                          # 1    # reg__VAR(bnode);
 
 void burm_reduce(NODEPTR_TYPE bnode, int goalnt);
 
-void addParam(char *name) {
-    enum Register r = reg();
-    regmap_insert(ctx.var_to_reg, name, (struct RegInfo) { .reg = r });
-    ++ctx.params_count;
-}
-
-void codegen_begin_function(char *fn_name, struct Symtab *params) {
+void codegen_begin_function(char *fn_name) {
     ctx = (struct CodeGenContext) {
         .fn_name = fn_name,
-        .var_to_reg = regmap_new(),
         .params_count = 0,
     };
-    symtab_foreach_variable(params, addParam);
-    if (ctx.params_count > 6) {
-        panic("too many params");
-    }
-
     printf("\t.extern raisesig\n", fn_name);
 
     printf("\t.global %s\n", fn_name);
@@ -439,13 +440,29 @@ void codegen_begin_function(char *fn_name, struct Symtab *params) {
     printf("\t.cfi_startproc\n");
 }
 
-void codegen_end_function() {
-    printf("\t.cfi_endproc\n");
-    printf("\t.size %s, .-%s\n", ctx.fn_name, ctx.fn_name);
+void codegen_add_param(char *name) {
+    enum Register r = reg();
+    push_variable(name, r);
+    ++ctx.params_count;
+    if (ctx.params_count > 6) {
+        panic("too many params");
+    }
 }
 
-void codegen_empty_function() {
-    printf("\tret\n");
+void codegen_free_variables(int var_count) {
+    for (int i = 0; i < var_count; ++i) {
+        enum Register reg = pop_variable();
+        if (reg != REGISTER_NONE)
+            free_reg(reg);
+    }
+}
+
+void codegen_end_function(bool empty) {
+    codegen_free_variables(ctx.params_count);
+    if (empty)
+        asm_return();
+    printf("\t.cfi_endproc\n");
+    printf("\t.size %s, .-%s\n", ctx.fn_name, ctx.fn_name);
 }
 
 void codegen_statement(NODEPTR_TYPE root) {

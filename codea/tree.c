@@ -22,6 +22,7 @@ struct Tree *tree_new(struct Tree *left, struct Tree *right, enum Type type) {
     result->num = 0;
     result->id = NULL;
     result->state = NULL;
+    result->guard_uid = 0;
     return result;
 }
 
@@ -38,5 +39,11 @@ struct Tree *tree_new_variable_assignment(char *name, struct Tree *expr) {
 struct Tree *tree_new_variable_declaration(char *name, struct Tree *expr) {
     struct Tree *result = tree_new(expr, NULL, TREE_DECL);
     result->id = name;
+    return result;
+}
+
+struct Tree *tree_new_guard(struct Tree *expr, int guard_uid) {
+    struct Tree *result = tree_new(expr, NULL, TREE_GUARD);
+    result->guard_uid = guard_uid;
     return result;
 }

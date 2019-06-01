@@ -11,6 +11,8 @@ struct Tree {
     enum Register reg;
     long num;
     char *id;
+    int cond_uid;
+    int guard_uid;
     
     struct burm_state* state;       /* state variable for BURG */
 };
@@ -53,6 +55,8 @@ enum Type {
     
     TREE_DECL,
     TREE_ASSIGN,
+
+    TREE_GUARD,
 };
 
 struct Tree *tree_new_num(long num);
@@ -61,5 +65,6 @@ struct Tree *tree_new(struct Tree *left, struct Tree *right, enum Type type);
 struct Tree *tree_nil();
 struct Tree *tree_new_variable_assignment(char *name, struct Tree *expr);
 struct Tree *tree_new_variable_declaration(char *name, struct Tree *expr);
+struct Tree *tree_new_guard(struct Tree *expr, int guard_uid);
 
 #endif

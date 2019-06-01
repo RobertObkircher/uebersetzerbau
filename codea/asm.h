@@ -15,6 +15,7 @@ enum Register {
     REG_COUNT,
     R15, // heap pointer
     REGISTER_NONE,
+    REGISTER_UNKNOWN,
 };
 
 const char* regstr(enum Register reg);
@@ -62,5 +63,7 @@ void asm_cons_imm_imm(unsigned long long v1, unsigned long long v2, enum Registe
 
 void asm_move_head_reg(enum Register target);
 void asm_move_tail_reg(enum Register target);
+
+void asm_jmp_guard(enum Register target, int guard_uid);
 
 #endif
