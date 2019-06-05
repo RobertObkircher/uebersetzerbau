@@ -113,8 +113,8 @@ stat
             @i @cond.cond_uid@ = next_unique_id++;
             @i @stat.tree@ = NULL;
             @i @stat.var_count@ = 0;
-            @codegen @revorder(1) printf("C%d:\n", @cond.cond_uid@);
-            @codegen printf("E%d:\n", @cond.cond_uid@);
+            @codegen @revorder(1) printf(".C%d:\n", @cond.cond_uid@);
+            @codegen printf(".E%d:\n", @cond.cond_uid@);
         @}
     | VAR ID '=' expr 
         @{ 
@@ -159,7 +159,7 @@ guarded
     : guard maybestats control
         @{
             @i @guard.guard_uid@ = next_unique_id++;
-            @codegen printf("G%d:\n", @guard.guard_uid@);
+            @codegen printf(".G%d:\n", @guard.guard_uid@);
         @}
     ;
 

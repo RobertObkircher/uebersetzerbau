@@ -1,7 +1,12 @@
 f()
     var a = 54;
     abc: cond
-        -> break abc;
-        -> 
+        -> cond
+            0 -> break;
+            1 -> break abc;
+           end;
+           break;
+        -> a = 434; break;
     end;
+    return a;
 end;

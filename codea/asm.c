@@ -256,7 +256,7 @@ void asm_move_tail_reg(enum Register target) {
 
 void asm_jmp_guard(enum Register target, int guard_uid) {
     const char *to = regstr(target);
-    printf("\tcmp $0 %%%s\n", to);
+    printf("\tcmp $0, %%%s\n", to);
     printf("\tje .G%d\n", guard_uid);
 }
 
