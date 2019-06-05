@@ -1,8 +1,8 @@
 #ifndef __TREE_H__
 #define __TREE_H__
 
-#include "regmap.h"
 #include <stdbool.h>
+#include "asm.h"
 
 struct Tree {
     int node_type;

@@ -3,7 +3,6 @@
 #include <assert.h>
 #include "names.h"
 #include "panic.h"
-#include "regmap.h"
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>

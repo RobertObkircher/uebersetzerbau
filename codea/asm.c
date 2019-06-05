@@ -1,6 +1,5 @@
 #include "asm.h"
 #include "panic.h"
-#include "regmap.h"
 #include <stdio.h>
 #include <stdlib.h>
 
