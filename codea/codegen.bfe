@@ -356,10 +356,10 @@ void guard_numreg(struct Tree *node) {
 %start stat
 %%
 stat: GUARD(numreg)               # 1    # guard_numreg(bnode);
-stat: DECL(reg)                   # 0    # variable_declaration(bnode);
+stat: DECL(tagreg)                # 0    # variable_declaration(bnode);
 stat: DECL(VAR)                   # 0    # variable_declaration_from_var(bnode);
 stat: DECL(const)                 # 0    # variable_declaration_from_const(bnode);
-stat: ASSIGN(reg)                 # 0    # variable_assignment(bnode);
+stat: ASSIGN(tagreg)              # 0    # variable_assignment(bnode);
 stat: ASSIGN(VAR)                 # 0    # variable_assignment_from_var(bnode);
 stat: ASSIGN(const)               # 0    # variable_assignment_from_const(bnode);
 stat: return                      # 0    #

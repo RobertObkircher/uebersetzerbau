@@ -15,7 +15,6 @@ enum Register {
     REG_COUNT,
     R15, // heap pointer
     REGISTER_NONE,
-    REGISTER_UNKNOWN,
 };
 
 const char* regstr(enum Register reg);

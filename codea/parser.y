@@ -279,9 +279,6 @@ geeqsub
 
 term
     : '(' expr ')'
-        @{
-            @i @term.tree@ = @expr.tree@;
-        @}
     | NUM
         @{
             @i @term.tree@ = tree_new_num(@NUM.value@);
@@ -289,7 +286,7 @@ term
     | ID
         @{
             @codegen lookup_variable_reg(@ID.name@); // codegen_statement should call this anyway
-            @i @term.tree@ = tree_new_id(@ID.name@);
+            @i @term.tree@ = tree_new_variable_usage(@ID.name@);
         @}
     | ID '(' maybeparams ')'
         @{
