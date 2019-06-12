@@ -1,0 +1,11 @@
+f(x,y)
+    return x + y;
+end;
+
+g(x, y)
+    return 2 * f(x, y);
+end;
+
+h(x, y)
+    return 2 * f(x * 3, y - 1);
+end;

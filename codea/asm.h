@@ -11,8 +11,8 @@ enum Register {
     R9,  /* 6 */
     R10,
     R11,
-    RAX, /* last, so it is usually available for the last allocation */
     REG_COUNT,
+    RAX, /* should never be allocated */
     R15, // heap pointer
     REGISTER_NONE,
 };
@@ -64,5 +64,10 @@ void asm_move_head_reg(enum Register target);
 void asm_move_tail_reg(enum Register target);
 
 void asm_jmp_guard(enum Register target, int guard_uid);
+
+void asm_push(enum Register target);
+void asm_pop(enum Register target);
+void asm_call(char *label);
+void asm_move_stack_reg(int offset, enum Register target);
 
 #endif

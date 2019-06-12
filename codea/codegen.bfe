@@ -327,6 +327,58 @@ void guard_numreg(struct Tree *node) {
     free_reg(reg);
 }
 
+//
+// Function calls
+//
+
+void function_call(struct Tree *node) {
+    struct Tree *left = LEFT_CHILD(node);
+    struct Tree *right = RIGHT_CHILD(node);
+
+    if(OP_LABEL(RIGHT_CHILD(node)) == TREE_NIL) {
+        // this is the last parameter
+    }
+
+    if (node->nth_argument != 0) {
+        node->arg_reg[node->nth_argument - 1] = left->reg;
+    }
+
+    if (node->nth_argument == node->arg_count) {
+        int stack_offset = 0;
+        int locations[6];
+        for (int i = 0; i < REG_COUNT; ++i) {
+            if (ctx.regs[i]) {
+                asm_push(i);
+                for (int j = 0; j < node->arg_count; ++j) {
+                    if (node->arg_reg[j] == i) {
+                        locations[j] = stack_offset;
+                    }
+                }
+                ++stack_offset;
+            }
+        }
+
+        for (int i = 0; i < node->arg_count; ++i) {
+            int bytes = (stack_offset - locations[i] - 1) * 8;
+            asm_move_stack_reg(bytes, i);
+        }
+
+        asm_call(node->id);
+        for (int i = REG_COUNT - 1; i >= 0; --i) {
+            if (ctx.regs[i]) {
+                asm_pop(i);
+            }
+        }
+
+        for (int i = 0; i < node->arg_count; ++i) {
+            free_reg(node->arg_reg[i]);
+            // TODO push arguments last, so they can be popped at once by incrementing rsp
+        }
+
+        asm_move_reg_reg(RAX, (node->reg = reg()));
+    }
+}
+
 
 /* symbols below must also be defined
    definition in tree.h!!!
@@ -351,6 +403,7 @@ void guard_numreg(struct Tree *node) {
 %term DECL=17
 %term ASSIGN=18
 %term GUARD=19
+%term ARG=20
 
 
 %start stat
@@ -422,6 +475,10 @@ const: CONST                      # 0    #
 reg: CONST                        # 1    # asm_immediate(bnode->num<<1, (bnode->reg=reg()));
 reg: const                        # 1    # asm_immediate(bnode->num<<1, (bnode->reg=reg()));
 reg: VAR                          # 1    # reg__VAR(bnode);
+nil: NIL                          # 0    #
+reg: ARG(nil, nil)                # 0    # function_call(bnode);
+reg: ARG(tagreg, nil)             # 0    # function_call(bnode);
+reg: ARG(tagreg, tagreg)          # 0    # function_call(bnode);
 %%
 
 void burm_reduce(NODEPTR_TYPE bnode, int goalnt);

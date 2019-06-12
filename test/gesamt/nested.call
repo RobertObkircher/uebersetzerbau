@@ -1,0 +1,7 @@
+extern long f(long);
+extern long g(long);
+extern long h(long, long);
+
+RET( g(43 << 1) == (43 * 39) << 1
+  && h(94 << 1, 51 << 1) == (91 * 83 + 51) << 1
+  && f(32 << 1) == (31 * 83 + 3) * 2 * 39 << 1);

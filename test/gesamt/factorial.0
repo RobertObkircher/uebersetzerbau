@@ -1,0 +1,9 @@
+f(x)
+    var result = 1;
+    cond
+        x >= 2 ->
+            result = x * f(x - 1);
+            break;
+    end;
+    return result;
+end;

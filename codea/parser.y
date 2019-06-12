@@ -35,12 +35,10 @@ static int next_unique_id = 1;
 
 @attributes { long value; } NUM
 @attributes { char *name; } ID
-@attributes {  } maybepars pars
-@attributes {  } maybeparams params
 @attributes { int empty; } maybestats 
 @attributes {  int cond_uid; } cond maybeguards guards guarded control 
 @attributes {  int cond_uid; int guard_uid; } guard
-@attributes { struct Tree *tree;  } term expr nhtis plusterms multterms orterms dotterms 
+@attributes { struct Tree *tree;  } term expr nhtis plusterms multterms orterms dotterms maybearguments arguments
 @attributes {  int var_count; } stats
 @attributes { struct Tree *tree; int var_count; } stat
 @attributes { int node_type; } nhti geeqsub 
@@ -288,20 +286,32 @@ term
             @codegen lookup_variable_reg(@ID.name@); // codegen_statement should call this anyway
             @i @term.tree@ = tree_new_variable_usage(@ID.name@);
         @}
-    | ID '(' maybeparams ')'
+    | ID '(' maybearguments ')'
         @{
-            @i @term.tree@ = NULL; // TODO
+            @i {
+                @term.tree@ = @maybearguments.tree@;
+                @maybearguments.tree@->id = @ID.name@;
+            }
         @}
     ;
 
-maybeparams
+maybearguments
     : /* empty */
-    | params
+        @{
+            @i @maybearguments.tree@ = tree_new_arg(tree_nil(), tree_nil());
+        @}
+    | arguments
     ;
 
-params
+arguments
     : expr
-    | params ',' expr
+        @{
+            @i @arguments.tree@ = tree_new_arg(@expr.tree@, tree_nil());
+        @}
+    | arguments ',' expr
+        @{
+            @i @arguments.tree@ = tree_new_arg(@expr.tree@, @arguments.1.tree@);
+        @}
     ;
 
 %%

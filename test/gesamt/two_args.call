@@ -1,0 +1,7 @@
+extern long f(long, long);
+extern long g(long, long);
+extern long h(long, long);
+
+RET(f(4 << 1, 432 << 1) == (4 + 432) << 1
+ && g(6 << 1, 238 << 1) == 2 * (6 + 238) << 1
+ && h(9 << 1, 92  << 1) == 2 * (9 * 3 + 92 - 1) << 1);

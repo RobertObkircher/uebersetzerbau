@@ -15,6 +15,7 @@ const char* regstr(enum Register reg) {
         case R10: return "r10";
         case R11: return "r11";
         case R15: return "r15";
+ //       case REGISTER_NONE: return "unknown";
         default: panic("unknown register %d", reg);
     }
 }
@@ -31,6 +32,7 @@ const char* regstr8(enum Register reg) {
         case R10: return "r10b";
         case R11: return "r11b";
         case R15: return "r15b";
+//        case REGISTER_NONE: return "unknown";
         default: panic("unknown register %d", reg);
     }
 }
@@ -259,3 +261,21 @@ void asm_jmp_guard(enum Register target, int guard_uid) {
     printf("\tje .G%d\n", guard_uid);
 }
 
+void asm_push(enum Register target) {
+    const char *to = regstr(target);
+    printf("\tpush %%%s\n", to);
+}
+
+void asm_pop(enum Register target) {
+    const char *to = regstr(target);
+    printf("\tpop %%%s\n", to);
+}
+
+void asm_call(char *label) {
+    printf("\tcall %s\n", label);
+}
+
+void asm_move_stack_reg(int offset, enum Register target) {
+    const char *to = regstr(target);
+    printf("\tmovq %d(%%rsp), %%%s\n", offset, to);
+}
