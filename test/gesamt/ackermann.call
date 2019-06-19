@@ -1,0 +1,4 @@
+extern long ackermann(m, n);
+
+RET(ackermann(3 << 1, 4 << 1) == 125 << 1
+ && ackermann(3 << 1, 2 << 1) == 29 << 1);

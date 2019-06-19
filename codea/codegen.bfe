@@ -335,10 +335,6 @@ void function_call(struct Tree *node) {
     struct Tree *left = LEFT_CHILD(node);
     struct Tree *right = RIGHT_CHILD(node);
 
-    if(OP_LABEL(RIGHT_CHILD(node)) == TREE_NIL) {
-        // this is the last parameter
-    }
-
     if (node->nth_argument != 0) {
         node->arg_reg[node->nth_argument - 1] = left->reg;
     }

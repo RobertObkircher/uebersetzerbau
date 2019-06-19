@@ -1,0 +1,18 @@
+ackermann(m, n)
+    var result = 0;
+    cond
+        m = 0 ->
+            result = n + 1;
+            break;
+        (m >= 1) * (n = 0) ->
+            result = ackermann(m - 1, 1);
+            break;
+        (m >= 1) * (n >= 1) ->
+            result = ackermann(m - 1, ackermann(m, n - 1));
+            break;
+        ->
+            result = 1 * (1.2);
+            break;
+    end;
+    return result;
+end;
