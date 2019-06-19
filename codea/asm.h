@@ -18,6 +18,7 @@ enum Register {
 };
 
 const char* regstr(enum Register reg);
+const char* regstr8(enum Register reg);
 
 void asm_untag_number(enum Register target);
 void asm_untag_list(enum Register target);

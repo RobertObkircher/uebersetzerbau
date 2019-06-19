@@ -1,0 +1,3 @@
+extern long h();
+
+RET(h() == 1 << 1);
